@@ -28,6 +28,19 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    /**
+     * It's for sing up directly from user
+     */
+    private String password;
+
+    @Column(nullable = false)
+    private Boolean isOAuthLogin = true;
+
+    @Builder.Default
+    private boolean isVerified = false;
+
+    private String verificationToken;
+
     public User(String name, String email, String picture, Role role) {
         this.name = name;
         this.email = email;
@@ -47,5 +60,9 @@ public class User {
         this.role = role;
 
         return this;
+    }
+
+    public void SuccessVerified() {
+        this.isVerified = true;
     }
 }

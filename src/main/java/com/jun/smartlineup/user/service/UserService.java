@@ -5,10 +5,15 @@ import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.OAuth2UserImpl;
 import com.jun.smartlineup.user.dto.OAuthAttributes;
+import com.jun.smartlineup.user.dto.SignupRequestDto;
 import com.jun.smartlineup.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -17,6 +22,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -24,6 +30,10 @@ import java.util.Collections;
 public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final UserRepository userRepository;
     private final DefaultOAuth2UserService oAuth2UserService;
+    private final JavaMailSender mailSender;
+
+    @Value("${backend.base.url}")
+    private String backendBaseUrl;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -39,7 +49,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                 oAuth2User.getAttributes()
         );
 
-        User user = upsert(attributes);
+        User user = Oauth2Upsert(attributes);
         return new OAuth2UserImpl(
                 Collections.singleton(new SimpleGrantedAuthority(user.getRole().name())),
                 attributes.getAttributes(),
@@ -47,7 +57,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
         );
     }
 
-    private User upsert(OAuthAttributes attributes) {
+    private User Oauth2Upsert(OAuthAttributes attributes) {
         User user = userRepository.findByEmail(attributes.getEmail())
                 .map(entity -> entity.update(attributes.getName(), attributes.getPicture(), entity.getRole()))
                 .orElseGet(() -> User.builder()
@@ -55,6 +65,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                         .email(attributes.getEmail())
                         .picture(attributes.getPicture())
                         .role(Role.USER)
+                        .isOAuthLogin(true)
                         .build()
                 );
 
@@ -65,5 +76,49 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
     public User convertUser(OAuth2User oAuth2User) {
         return userRepository.findByEmail(oAuth2User.getAttribute("email"))
                 .orElseThrow(NoExistUserException::new);
+    }
+
+    public void signup(SignupRequestDto signupDto) {
+        if (userRepository.findByEmail(signupDto.getEmail()).isEmpty()) {
+            throw new RuntimeException("already use email");
+        }
+
+        String verificationToken = UUID.randomUUID().toString();
+        User user = User.builder()
+                .email(signupDto.getEmail())
+                .password(encodePassword(signupDto.getPassword()))
+                .name(signupDto.getName())
+                .isOAuthLogin(false)
+                .role(Role.USER)
+                .isVerified(false)
+                .verificationToken(verificationToken)
+                .build();
+
+        userRepository.save(user);
+        sendVerificationEmail(user.getEmail(),
+                backendBaseUrl + "/auth/verify-email?token=" + verificationToken);
+    }
+
+    public void verifyEmail(String token) {
+        User user = userRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new RuntimeException("No exist token"));
+
+        if (user.isVerified()) {
+            throw new RuntimeException("이미 인증된 사용자입니다.");
+        }
+
+        user.SuccessVerified();
+    }
+
+    private void sendVerificationEmail(String email, String link) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Email Verification");
+        message.setText("Please click the link below to complete your verification:\n" + link);
+        mailSender.send(message);
+    }
+
+    private String encodePassword(String password) {
+        return new BCryptPasswordEncoder().encode(password);
     }
 }
