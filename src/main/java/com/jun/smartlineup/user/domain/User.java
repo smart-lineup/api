@@ -14,6 +14,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     @Column(nullable = false)
@@ -28,12 +29,11 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    /**
-     * It's for sing up directly from user
-     */
+    // hash fix length is 60
+    @Column(length = 60)
     private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_OAuth_login")
     private Boolean isOAuthLogin = true;
 
     @Builder.Default

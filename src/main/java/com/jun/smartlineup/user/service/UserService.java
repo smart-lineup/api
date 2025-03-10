@@ -1,5 +1,6 @@
 package com.jun.smartlineup.user.service;
 
+import com.jun.smartlineup.exception.EmailAlreadyExistException;
 import com.jun.smartlineup.exception.NoExistUserException;
 import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
@@ -32,8 +33,8 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
     private final DefaultOAuth2UserService oAuth2UserService;
     private final JavaMailSender mailSender;
 
-    @Value("${backend.base.url}")
-    private String backendBaseUrl;
+    @Value("${frontend.url}")
+    private String frontendBaseUrl;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -79,8 +80,8 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
     }
 
     public void signup(SignupRequestDto signupDto) {
-        if (userRepository.findByEmail(signupDto.getEmail()).isEmpty()) {
-            throw new RuntimeException("already use email");
+        if (userRepository.findByEmail(signupDto.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistException();
         }
 
         String verificationToken = UUID.randomUUID().toString();
@@ -96,7 +97,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
 
         userRepository.save(user);
         sendVerificationEmail(user.getEmail(),
-                backendBaseUrl + "/auth/verify-email?token=" + verificationToken);
+                frontendBaseUrl + "/verify-email?token=" + verificationToken);
     }
 
     public void verifyEmail(String token) {
@@ -104,7 +105,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                 .orElseThrow(() -> new RuntimeException("No exist token"));
 
         if (user.isVerified()) {
-            throw new RuntimeException("이미 인증된 사용자입니다.");
+            return;
         }
 
         user.SuccessVerified();

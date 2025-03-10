@@ -20,6 +20,12 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String uri = request.getRequestURI();
+        if (uri.startsWith("/auth")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = jwtTokenProvider.getTokenFromCookies(request);
         if (token == null || !jwtTokenProvider.validateToken(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT Token");

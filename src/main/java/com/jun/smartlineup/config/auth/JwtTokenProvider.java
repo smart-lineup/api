@@ -90,11 +90,15 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        String token = createToken(authentication);
-        Cookie jwtCookie = cookieFactory(token);
+        Cookie jwtCookie = getJwtCookie(authentication);
 
         response.addCookie(jwtCookie);
         response.sendRedirect(frontendUrl + "/resume");
+    }
+
+    public Cookie getJwtCookie(Authentication authentication) {
+        String token = createToken(authentication);
+        return cookieFactory(token);
     }
 
     public CorsConfigurationSource corsConfigurationSource() {
