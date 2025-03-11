@@ -63,6 +63,16 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
                 .compact();
     }
 
+    public String createToken(com.jun.smartlineup.user.domain.User user) {
+        return Jwts.builder()
+                .subject(user.getEmail())
+                .claim("name", user.getName())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(key)
+                .compact();
+    }
+
     public boolean validateToken(String token) {
         try {
             Claims claims = Jwts.parser()
@@ -103,6 +113,11 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
 
     public Cookie getJwtCookie(Authentication authentication) {
         String token = createToken(authentication);
+        return cookieFactory(token);
+    }
+
+    public Cookie getJwtCookie(com.jun.smartlineup.user.domain.User user) {
+        String token = createToken(user);
         return cookieFactory(token);
     }
 

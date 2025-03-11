@@ -3,6 +3,8 @@ package com.jun.smartlineup.user.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -41,6 +43,12 @@ public class User {
 
     private String verificationToken;
 
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
     public User(String name, String email, String picture, Role role) {
         this.name = name;
         this.email = email;
@@ -64,5 +72,9 @@ public class User {
 
     public void SuccessVerified() {
         this.isVerified = true;
+    }
+
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
     }
 }

@@ -7,18 +7,12 @@ import com.jun.smartlineup.exception.NoExistUserException;
 import com.jun.smartlineup.exception.NotVerifyUserException;
 import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
-import com.jun.smartlineup.user.dto.LoginRequestDto;
-import com.jun.smartlineup.user.dto.OAuth2UserImpl;
-import com.jun.smartlineup.user.dto.OAuthAttributes;
-import com.jun.smartlineup.user.dto.SignupRequestDto;
+import com.jun.smartlineup.user.dto.*;
 import com.jun.smartlineup.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -129,9 +123,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
             throw new NotVerifyUserException();
         }
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, Collections.emptyList());
-
-        return jwtTokenProvider.getJwtCookie(authentication);
+        return jwtTokenProvider.getJwtCookie(user);
     }
 
     private String encodePassword(String password) {

@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class Queue {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "queue_id")
     private Long id;
 

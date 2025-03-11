@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Attendee {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "attendee_id")
     private Long id;
 
@@ -30,7 +31,7 @@ public class Attendee {
     private String phone;
 
     @Lob
-    @Column(name = "info", columnDefinition = "JSON")
+    @Column(columnDefinition = "JSON")
     private String info;
 
     @Builder.Default

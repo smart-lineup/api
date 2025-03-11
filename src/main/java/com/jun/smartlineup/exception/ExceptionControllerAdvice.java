@@ -14,12 +14,14 @@ public class ExceptionControllerAdvice {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> badRequestException(RuntimeException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
+        System.out.println(e.getMessage());
+        return ResponseEntity.badRequest().body("badRequestException");
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(EmailAlreadyExistException.class)
     public ResponseEntity<ExceptionDto> emailAlreadyExistException(EmailAlreadyExistException e) {
+        System.out.println(e.getMessage());
         ExceptionDto exceptionDto = ExceptionDto.builder()
                 .code(400)
                 .status("email")
@@ -31,6 +33,7 @@ public class ExceptionControllerAdvice {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(NotVerifyUserException.class)
     public ResponseEntity<ExceptionDto> notVerifyUserException(NotVerifyUserException e) {
+        System.out.println(e.getMessage());
         ExceptionDto exceptionDto = ExceptionDto.builder()
                 .code(400)
                 .status("not_verify")
@@ -42,6 +45,7 @@ public class ExceptionControllerAdvice {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(MessagingException.class)
     public ResponseEntity<String> messagingException(MessagingException e) {
+        System.out.println(e.getMessage());
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 }
