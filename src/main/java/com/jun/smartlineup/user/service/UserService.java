@@ -1,18 +1,26 @@
 package com.jun.smartlineup.user.service;
 
+import com.jun.smartlineup.config.auth.JwtTokenProvider;
+import com.jun.smartlineup.config.email.EmailService;
 import com.jun.smartlineup.exception.EmailAlreadyExistException;
 import com.jun.smartlineup.exception.NoExistUserException;
+import com.jun.smartlineup.exception.NotVerifyUserException;
 import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
+import com.jun.smartlineup.user.dto.LoginRequestDto;
 import com.jun.smartlineup.user.dto.OAuth2UserImpl;
 import com.jun.smartlineup.user.dto.OAuthAttributes;
 import com.jun.smartlineup.user.dto.SignupRequestDto;
 import com.jun.smartlineup.user.repository.UserRepository;
+import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -23,6 +31,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,10 +40,8 @@ import java.util.UUID;
 public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final UserRepository userRepository;
     private final DefaultOAuth2UserService oAuth2UserService;
-    private final JavaMailSender mailSender;
-
-    @Value("${frontend.url}")
-    private String frontendBaseUrl;
+    private final EmailService emailService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -67,6 +74,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                         .picture(attributes.getPicture())
                         .role(Role.USER)
                         .isOAuthLogin(true)
+                        .isVerified(true)
                         .build()
                 );
 
@@ -79,7 +87,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                 .orElseThrow(NoExistUserException::new);
     }
 
-    public void signup(SignupRequestDto signupDto) {
+    public void signup(SignupRequestDto signupDto) throws MessagingException {
         if (userRepository.findByEmail(signupDto.getEmail()).isPresent()) {
             throw new EmailAlreadyExistException();
         }
@@ -96,8 +104,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                 .build();
 
         userRepository.save(user);
-        sendVerificationEmail(user.getEmail(),
-                frontendBaseUrl + "/verify-email?token=" + verificationToken);
+        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
     }
 
     public void verifyEmail(String token) {
@@ -111,15 +118,28 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
         user.SuccessVerified();
     }
 
-    private void sendVerificationEmail(String email, String link) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Email Verification");
-        message.setText("Please click the link below to complete your verification:\n" + link);
-        mailSender.send(message);
+    public Cookie login(LoginRequestDto loginRequestDto) {
+        Optional<User> userOptional = userRepository.findByEmail(loginRequestDto.getEmail());
+        User user = userOptional.orElseThrow(NoExistUserException::new);
+
+        if (!new BCryptPasswordEncoder().matches(loginRequestDto.getPassword(), user.getPassword())) {
+            throw new NoExistUserException();
+        }
+        if (!user.isVerified()) {
+            throw new NotVerifyUserException();
+        }
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, Collections.emptyList());
+
+        return jwtTokenProvider.getJwtCookie(authentication);
     }
 
     private String encodePassword(String password) {
         return new BCryptPasswordEncoder().encode(password);
+    }
+
+    public User findByEmail(String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        return user.orElseThrow(NoExistUserException::new);
     }
 }

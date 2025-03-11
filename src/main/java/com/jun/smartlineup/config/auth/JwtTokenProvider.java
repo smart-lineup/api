@@ -1,5 +1,6 @@
 package com.jun.smartlineup.config.auth;
 
+import com.jun.smartlineup.user.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
@@ -21,10 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -53,8 +52,11 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
     }
 
     public String createToken(Authentication authentication) {
+        OAuth2User user = (OAuth2User) authentication.getPrincipal();
+
         return Jwts.builder()
-                .subject(authentication.getName())
+                .subject(user.getAttribute("email"))
+                .claim("name", user.getAttribute("name"))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key)
@@ -68,7 +70,6 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            System.out.println("성공!");
             return true;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -84,7 +85,11 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        User user = new User(claims.getSubject(), "", Collections.emptyList());
+        String email = claims.getSubject();
+        String name = claims.get("name", String.class);
+
+        // User 객체에 추가 정보 반영 (필요 시 커스텀 User 클래스 사용)
+        User user = new User(email, "", Collections.emptyList());
         return new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
     }
 
@@ -93,7 +98,7 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
         Cookie jwtCookie = getJwtCookie(authentication);
 
         response.addCookie(jwtCookie);
-        response.sendRedirect(frontendUrl + "/resume");
+        response.sendRedirect(frontendUrl + "/");
     }
 
     public Cookie getJwtCookie(Authentication authentication) {
@@ -147,5 +152,23 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
             }
         }
         return null;
+    }
+
+    public String getNameFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.get("name", String.class);
+    }
+
+    public String getEmailFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.getSubject();
     }
 }

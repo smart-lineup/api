@@ -1,4 +1,4 @@
-package com.jun.smartlineup.queue.Dto;
+package com.jun.smartlineup.queue.dto;
 
 import lombok.Builder;
 import lombok.Data;
