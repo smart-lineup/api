@@ -1,7 +1,6 @@
 package com.jun.smartlineup.config.auth;
 
 import com.jun.smartlineup.user.dto.CustomUserDetails;
-import com.jun.smartlineup.user.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -12,10 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -25,7 +24,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.util.*;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -107,18 +109,18 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        Cookie jwtCookie = getJwtCookie(authentication);
+        ResponseCookie jwtCookie = getJwtCookie(authentication);
 
-        response.addCookie(jwtCookie);
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
         response.sendRedirect(frontendUrl + "/");
     }
 
-    public Cookie getJwtCookie(Authentication authentication) {
+    public ResponseCookie getJwtCookie(Authentication authentication) {
         String token = createToken(authentication);
         return cookieFactory(token, 7 * 24 * 60 * 60);
     }
 
-    public Cookie getJwtCookie(com.jun.smartlineup.user.domain.User user) {
+    public ResponseCookie getJwtCookie(com.jun.smartlineup.user.domain.User user) {
         String token = createToken(user);
         return cookieFactory(token, 7 * 24 * 60 * 60);
     }
@@ -135,28 +137,26 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
         return source;
     }
 
-    public Cookie cookieFactory(String token, int maxAge) {
+    public ResponseCookie cookieFactory(String token, int maxAge) {
         if (activeProfile.equals("local")) {
-            Cookie jwtCookie = new Cookie("Authorization", token);
-            jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(false);
-            jwtCookie.setPath("/");
-            jwtCookie.setMaxAge(maxAge);
-            jwtCookie.setDomain(frontendDomain);
-            jwtCookie.setAttribute("SameSite", "Lax");
-
-            return jwtCookie;
+            return ResponseCookie.from("Authorization", token)
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .maxAge(maxAge)
+                    .domain(frontendDomain)
+                    .sameSite("Lax")
+                    .build();
         }
 
-        // prod
-        Cookie jwtCookie = new Cookie("Authorization", token);
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true); // todo: need to change
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(maxAge);
-        jwtCookie.setDomain(frontendDomain);
-        jwtCookie.setAttribute("SameSite", "None"); // cors
-        return jwtCookie;
+        return ResponseCookie.from("Authorization", token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(maxAge)
+                .domain(frontendDomain)
+                .sameSite("None")
+                .build();
     }
 
     public String getTokenFromCookies(HttpServletRequest request) {
