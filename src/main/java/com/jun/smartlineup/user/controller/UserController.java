@@ -1,0 +1,47 @@
+package com.jun.smartlineup.user.controller;
+
+import com.jun.smartlineup.config.auth.JwtTokenProvider;
+import com.jun.smartlineup.user.dto.CustomUserDetails;
+import com.jun.smartlineup.user.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/user")
+public class UserController {
+    private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @GetMapping("/check")
+    public ResponseEntity<String> check() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
+            return ResponseEntity.ok("login yet");
+        }
+
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        return ResponseEntity.ok(user.getName());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie cookie = jwtTokenProvider.cookieFactory("", 0);
+        response.addCookie(cookie);
+
+        // Clear the security context
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok("logout success");
+    }
+}

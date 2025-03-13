@@ -1,5 +1,6 @@
 package com.jun.smartlineup.config.auth;
 
+import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -80,10 +82,11 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            return true;
+
+            Date expiration = claims.getExpiration();
+            return expiration.after(new Date());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-//            log.error("Invalid JWT token", e);
+            System.out.println("valid Token Error: " + e.getMessage());
             return false;
         }
     }
@@ -98,9 +101,8 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
         String email = claims.getSubject();
         String name = claims.get("name", String.class);
 
-        // User 객체에 추가 정보 반영 (필요 시 커스텀 User 클래스 사용)
-        User user = new User(email, "", Collections.emptyList());
-        return new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
+        CustomUserDetails userDetails = new CustomUserDetails(email, name, Collections.emptyList());
+        return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
     }
 
     @Override
@@ -113,12 +115,12 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
 
     public Cookie getJwtCookie(Authentication authentication) {
         String token = createToken(authentication);
-        return cookieFactory(token);
+        return cookieFactory(token, 7 * 24 * 60 * 60);
     }
 
     public Cookie getJwtCookie(com.jun.smartlineup.user.domain.User user) {
         String token = createToken(user);
-        return cookieFactory(token);
+        return cookieFactory(token, 7 * 24 * 60 * 60);
     }
 
     public CorsConfigurationSource corsConfigurationSource() {
@@ -133,14 +135,14 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
         return source;
     }
 
-    private Cookie cookieFactory(String token) {
+    public Cookie cookieFactory(String token, int maxAge) {
         if (activeProfile.equals("local")) {
             Cookie jwtCookie = new Cookie("Authorization", token);
             jwtCookie.setHttpOnly(true);
             jwtCookie.setSecure(false);
             jwtCookie.setPath("/");
-            jwtCookie.setMaxAge(7 * 24 * 60 * 60);
-            jwtCookie.setDomain("localhost");
+            jwtCookie.setMaxAge(maxAge);
+            jwtCookie.setDomain(frontendDomain);
             jwtCookie.setAttribute("SameSite", "Lax");
 
             return jwtCookie;
@@ -151,7 +153,7 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
         jwtCookie.setHttpOnly(true);
         jwtCookie.setSecure(true); // todo: need to change
         jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(7 * 24 * 60 * 60); // 24 hours
+        jwtCookie.setMaxAge(maxAge);
         jwtCookie.setDomain(frontendDomain);
         jwtCookie.setAttribute("SameSite", "None"); // cors
         return jwtCookie;
@@ -167,23 +169,5 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
             }
         }
         return null;
-    }
-
-    public String getNameFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claims.get("name", String.class);
-    }
-
-    public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claims.getSubject();
     }
 }
