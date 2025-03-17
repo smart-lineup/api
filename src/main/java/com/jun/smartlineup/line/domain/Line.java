@@ -34,4 +34,8 @@ public class Line {
 
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public void changeName(String name) {
+        this.name = name;
+    }
 }

@@ -43,8 +43,8 @@ public class Queue {
     @JoinColumn(name = "next_id")
     private Queue next;
 
-    @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private QueueStatus status;
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
