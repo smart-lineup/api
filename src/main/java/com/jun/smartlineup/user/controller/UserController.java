@@ -23,17 +23,7 @@ public class UserController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    @GetMapping("/check")
-    public ResponseEntity<String> check() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
-            return ResponseEntity.ok("login yet");
-        }
-
-        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
-        return ResponseEntity.ok(user.getName());
-    }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {

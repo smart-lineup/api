@@ -5,6 +5,8 @@ import com.jun.smartlineup.user.dto.*;
 import com.jun.smartlineup.user.service.PasswordResetService;
 import com.jun.smartlineup.user.service.UserService;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +14,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -74,5 +79,18 @@ public class AuthController {
     public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordDto dto) {
         passwordResetService.changePassword(dto);
         return ResponseEntity.ok("password is changed");
+    }
+
+    @GetMapping("/check")
+    public ResponseEntity<String> check(HttpServletRequest request) {
+        String token = jwtTokenProvider.getTokenFromCookies(request);
+
+        if (token == null || !jwtTokenProvider.validateToken(token)) {
+            return ResponseEntity.ok("login yet");
+        }
+
+        Authentication authentication = jwtTokenProvider.getAuthenticationFromToken(token);
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        return ResponseEntity.ok(user.getName());
     }
 }
