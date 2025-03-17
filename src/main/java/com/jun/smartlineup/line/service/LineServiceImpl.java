@@ -42,13 +42,13 @@ public class LineServiceImpl implements LineService {
         return linesByUser.stream().map(LineResponseDto::fromEntity).toList();
     }
 
-    public void remove(CustomUserDetails userDetails, LineRemoveRequestDto dto) {
+    public void remove(CustomUserDetails userDetails, Long id) {
         Optional<User> optionalUser = userRepository.findByEmail(userDetails.getUsername());
         User user = optionalUser.orElseThrow(NoExistUserException::new);
 
-        Optional<Line> optionalLine = lineRepository.getLineByIdAndUser(dto.getId(), user);
+        Optional<Line> optionalLine = lineRepository.getLineByIdAndUser(id, user);
         Line line = optionalLine.orElseThrow(() ->
-                new RuntimeException("Remove error::No correct::" + user.getEmail() + "::" + dto.getId()));
+                new RuntimeException("Remove error::No correct::" + user.getEmail() + "::" + id));
 
         lineRepository.delete(line);
     }

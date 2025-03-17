@@ -45,16 +45,16 @@ public class LineController {
         return ResponseEntity.ok(lineList);
     }
 
-    @PostMapping("/remove")
-    public ResponseEntity<String> remove(@Valid @RequestBody LineRemoveRequestDto dto) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> remove(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
-        lineService.remove(user, dto);
+        lineService.remove(user, id);
         return ResponseEntity.ok("ok");
     }
 
-    @PutMapping("/change/name")
+    @PutMapping("/name")
     public ResponseEntity<String> changeName(@Valid @RequestBody LineChangeNameRequestDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
