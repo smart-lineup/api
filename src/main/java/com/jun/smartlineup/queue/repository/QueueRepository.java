@@ -5,9 +5,15 @@ import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface QueueRepository extends JpaRepository<Queue, Long> {
-    Optional<Queue> findQueueByUserAndLine(User user, Line line);
+
+    @Query("SELECT q FROM Queue q WHERE q.line.id = :lineId AND q.line.user = :user")
+    List<Queue> findByUserAndLine_Id(@Param("user") User user, @Param("lineId") Long lineId);
+
+    Optional<Queue> findFirstByLineOrderByIdDesc(Line line);
 }

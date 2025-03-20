@@ -26,7 +26,6 @@ public class PasswordResetService {
     private final UserRepository userRepository;
     private final EmailService emailService;
 
-    // 6자리 랜덤 코드 생성
     public String generateResetToken() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder token = new StringBuilder();
@@ -37,7 +36,6 @@ public class PasswordResetService {
         return token.toString();
     }
 
-    // 이메일로 인증 코드 전송
     public void sendResetEmail(String email) throws MessagingException {
         userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));

@@ -4,10 +4,7 @@ import com.jun.smartlineup.attendee.domain.Attendee;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -16,16 +13,15 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "queue", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"line_id", "order_no"})
+})
 public class Queue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "queue_id")
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attendee_id")
@@ -35,20 +31,26 @@ public class Queue {
     @JoinColumn(name = "line_id")
     private Line line;
 
-    @ManyToOne
-    @JoinColumn(name = "previous_id")
-    private Queue previous;
-
-    @ManyToOne
-    @JoinColumn(name = "next_id")
-    private Queue next;
+    @Column(nullable = false)
+    private Long orderNo;
 
     @Enumerated(EnumType.STRING)
-    private QueueStatus status;
+    @Builder.Default
+    private QueueStatus status = QueueStatus.WAITING;
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public static Queue createQueue(Line line, long orderNo, Attendee attendee) {
+        return Queue.builder()
+                .attendee(attendee)
+                .line(line)
+                .orderNo(orderNo)
+                .build();
+    }
+
+
 }

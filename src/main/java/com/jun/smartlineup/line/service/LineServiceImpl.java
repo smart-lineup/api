@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class LineServiceImpl implements LineService {
 
         Line line = Line.builder().name(name)
                 .user(user)
+                .uuid(UUID.randomUUID().toString())
                 .build();
         lineRepository.save(line);
     }
@@ -63,5 +65,4 @@ public class LineServiceImpl implements LineService {
 
         line.changeName(dto.getName());
     }
-
 }

@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @Builder
-public class QueueRequestDto {
+public class QueueAddRequestDto {
 
 }

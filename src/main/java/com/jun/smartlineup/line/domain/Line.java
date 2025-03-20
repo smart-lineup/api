@@ -29,6 +29,9 @@ public class Line {
     @Size(min = 1, max = 100)
     private String name;
 
+    @Size(min = 36, max = 36)
+    private String uuid;
+
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
