@@ -8,9 +8,11 @@ import lombok.Data;
 @Builder
 public class QueueChangeRequestDto {
     @NotNull
-    private final Long queue_id1;
+    private final Long queueId;
     @NotNull
-    private final Long queue_id2;
+    private final Long lineId;
     @NotNull
-    private final Long line_id;
+    private final Long startOrderNo;
+    @NotNull
+    private final Long reachOrderNo;
 }

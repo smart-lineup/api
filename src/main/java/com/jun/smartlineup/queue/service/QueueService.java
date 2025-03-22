@@ -15,5 +15,5 @@ public interface QueueService {
 
     void addFromAttendee(Line line, Attendee attendee);
 
-    void changeOrder(CustomUserDetails userDetails, QueueChangeRequestDto dto);
+    void reorder(CustomUserDetails userDetails, QueueChangeRequestDto dto);
 }

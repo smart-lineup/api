@@ -1,6 +1,7 @@
 package com.jun.smartlineup.queue.service;
 
 import com.jun.smartlineup.queue.repository.QueueRepository;
+import com.jun.smartlineup.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,11 +20,12 @@ class QueueServiceImplTest {
     @Autowired
     private QueueRepository queueRepository;
 
-    private QueueService queueService;
+    @Autowired
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
-        queueService = new QueueServiceImpl(queueRepository);
+
     }
 
     @Test

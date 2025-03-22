@@ -36,6 +36,7 @@ public class User {
     private String password;
 
     @Column(nullable = false, name = "is_OAuth_login")
+    @Builder.Default
     private Boolean isOAuthLogin = true;
 
     @Builder.Default

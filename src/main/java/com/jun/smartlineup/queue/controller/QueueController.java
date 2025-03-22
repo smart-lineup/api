@@ -28,6 +28,11 @@ public class QueueController {
         return ResponseEntity.ok(list);
     }
 
+    @PostMapping("/reorder")
+    public ResponseEntity<String> reorder() {
+        return ResponseEntity.ok("ok");
+    }
+
 //    @PostMapping("/add")
 //    public ResponseEntity<String> add()
 }

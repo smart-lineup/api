@@ -25,7 +25,6 @@ import java.util.Optional;
 public class QueueServiceImpl implements QueueService {
     private final QueueRepository queueRepository;
     private final UserRepository userRepository;
-    private final LineService lineService;
 
     @Override
     public void save(Queue queue) {
@@ -51,9 +50,31 @@ public class QueueServiceImpl implements QueueService {
     }
 
     @Override
-    public void changeOrder(CustomUserDetails userDetails, QueueChangeRequestDto dto) {
+    public void reorder(CustomUserDetails userDetails, QueueChangeRequestDto dto) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
+//
+//        Long oldOrderNo = queueRepository.findOrderNoByQueueId(queueId);
+//        String sql;
+//        if (newOrderNo < oldOrderNo) {
+//            // Moving up
+//            sql = "UPDATE queue " +
+//                    "SET order_no = CASE " +
+//                    "WHEN queue_id = :queueId THEN :newOrderNo " +
+//                    "WHEN order_no >= :newOrderNo AND order_no < :oldOrderNo THEN order_no + 1 " +
+//                    "ELSE order_no END " +
+//                    "WHERE line_id = :lineId " +
+//                    "AND (queue_id = :queueId OR (order_no >= :newOrderNo AND order_no < :oldOrderNo))";
+//        } else {
+//            // Moving down
+//            sql = "UPDATE queue " +
+//                    "SET order_no = CASE " +
+//                    "WHEN queue_id = :queueId THEN :newOrderNo " +
+//                    "WHEN order_no > :oldOrderNo AND order_no <= :newOrderNo THEN order_no - 1 " +
+//                    "ELSE order_no END " +
+//                    "WHERE line_id = :lineId " +
+//                    "AND (queue_id = :queueId OR (order_no > :oldOrderNo AND order_no <= :newOrderNo))";
+//        }
     }
 
 }
