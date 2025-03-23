@@ -6,13 +6,12 @@ import lombok.Data;
 
 @Data
 @Builder
-public class QueueChangeRequestDto {
+public class QueueReorderRequestDto {
     @NotNull
-    private final Long queueId;
+    private final Long movedQueueId;
+    @NotNull
+    private final Long targetQueueId;
     @NotNull
     private final Long lineId;
-    @NotNull
-    private final Long startOrderNo;
-    @NotNull
-    private final Long reachOrderNo;
+
 }

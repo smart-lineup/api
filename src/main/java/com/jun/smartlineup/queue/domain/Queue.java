@@ -13,9 +13,6 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "queue", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"line_id", "order_no"})
-})
 public class Queue {
 
     @Id
@@ -31,8 +28,15 @@ public class Queue {
     @JoinColumn(name = "line_id")
     private Line line;
 
-    @Column(nullable = false)
-    private Long orderNo;
+    @ManyToOne
+    @JoinColumn(name = "previous_id")
+    @Setter
+    private Queue previous;
+
+    @ManyToOne
+    @JoinColumn(name = "next_id")
+    @Setter
+    private Queue next;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -44,11 +48,10 @@ public class Queue {
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public static Queue createQueue(Line line, long orderNo, Attendee attendee) {
+    public static Queue createQueue(Line line, Attendee attendee) {
         return Queue.builder()
                 .attendee(attendee)
                 .line(line)
-                .orderNo(orderNo)
                 .build();
     }
 

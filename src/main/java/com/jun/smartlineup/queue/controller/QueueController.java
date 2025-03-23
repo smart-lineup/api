@@ -1,9 +1,11 @@
 package com.jun.smartlineup.queue.controller;
 
 import com.jun.smartlineup.queue.domain.Queue;
+import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
 import com.jun.smartlineup.queue.dto.QueueResponseDto;
 import com.jun.smartlineup.queue.service.QueueService;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,11 +30,12 @@ public class QueueController {
         return ResponseEntity.ok(list);
     }
 
-    @PostMapping("/reorder")
-    public ResponseEntity<String> reorder() {
+    @PutMapping("/reorder")
+    public ResponseEntity<String> reorder(@Valid @RequestBody QueueReorderRequestDto dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+
+        queueService.reorder(user, dto);
         return ResponseEntity.ok("ok");
     }
-
-//    @PostMapping("/add")
-//    public ResponseEntity<String> add()
 }

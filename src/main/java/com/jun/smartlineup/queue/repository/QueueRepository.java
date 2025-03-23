@@ -13,7 +13,8 @@ import java.util.Optional;
 public interface QueueRepository extends JpaRepository<Queue, Long> {
 
     @Query("SELECT q FROM Queue q WHERE q.line.id = :lineId AND q.line.user = :user")
-    List<Queue> findByUserAndLine_Id(@Param("user") User user, @Param("lineId") Long lineId);
+    List<Queue> findAllByUserAndLine_Id(@Param("user") User user, @Param("lineId") Long lineId);
 
     Optional<Queue> findFirstByLineOrderByIdDesc(Line line);
+
 }

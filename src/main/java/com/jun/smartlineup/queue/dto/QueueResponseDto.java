@@ -13,18 +13,25 @@ import java.time.LocalDateTime;
 public class QueueResponseDto {
     private Long id;
     private AttendeeResponseDto attendee;
-    private Long orderNo;
+    private Long previousId;
+    private Long nextId;
     private QueueStatus status;
     private LocalDateTime createdAt;
 
 
     public static QueueResponseDto fromEntity(Queue queue) {
-        return QueueResponseDto.builder()
+        QueueResponseDto dto = QueueResponseDto.builder()
                 .id(queue.getId())
                 .attendee(AttendeeResponseDto.fromDto(queue.getAttendee()))
-                .orderNo(queue.getOrderNo())
                 .status(queue.getStatus())
                 .createdAt(queue.getCreatedAt())
                 .build();
+        if (queue.getPrevious() != null) {
+            dto.setPreviousId(queue.getPrevious().getId());
+        }
+        if (queue.getNext() != null) {
+            dto.setNextId(queue.getNext().getId());
+        }
+        return dto;
     }
 }
