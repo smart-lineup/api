@@ -3,6 +3,7 @@ package com.jun.smartlineup.queue.service;
 import com.jun.smartlineup.attendee.domain.Attendee;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.queue.domain.Queue;
+import com.jun.smartlineup.queue.domain.QueueStatus;
 import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 
@@ -16,4 +17,6 @@ public interface QueueService {
     void addFromAttendee(Line line, Attendee attendee);
 
     void reorder(CustomUserDetails userDetails, QueueReorderRequestDto dto);
+
+    void changeStatus(CustomUserDetails userDetails, Long queueId, String status);
 }

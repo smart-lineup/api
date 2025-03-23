@@ -1,13 +1,12 @@
 package com.jun.smartlineup.user.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -32,9 +31,12 @@ public class PasswordResetToken {
     private LocalDateTime expiryDate = LocalDateTime.now().plusHours(2);
 
     @Builder.Default
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder.Default
+    @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public void use() {

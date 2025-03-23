@@ -5,6 +5,8 @@ import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -40,12 +42,16 @@ public class Queue {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
+    @Setter
     private QueueStatus status = QueueStatus.WAITING;
 
     @Builder.Default
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder.Default
+    @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public static Queue createQueue(Line line, Attendee attendee) {
@@ -54,6 +60,5 @@ public class Queue {
                 .line(line)
                 .build();
     }
-
 
 }

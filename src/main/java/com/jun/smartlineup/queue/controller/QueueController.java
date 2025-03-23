@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,6 +37,18 @@ public class QueueController {
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
         queueService.reorder(user, dto);
+        return ResponseEntity.ok("ok");
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<String> changeStatus(@PathVariable("id") Long queueId, @RequestBody Map<String, String> map) {
+        if (!map.containsKey("status")) {
+            return ResponseEntity.badRequest().body("Need status in request");
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+
+        queueService.changeStatus(user, queueId, map.get("status"));
         return ResponseEntity.ok("ok");
     }
 }

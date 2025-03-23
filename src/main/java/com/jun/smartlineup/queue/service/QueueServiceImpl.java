@@ -3,6 +3,7 @@ package com.jun.smartlineup.queue.service;
 import com.jun.smartlineup.attendee.domain.Attendee;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.queue.domain.Queue;
+import com.jun.smartlineup.queue.domain.QueueStatus;
 import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
 import com.jun.smartlineup.queue.repository.QueueRepository;
 import com.jun.smartlineup.user.domain.User;
@@ -122,6 +123,21 @@ public class QueueServiceImpl implements QueueService {
 
         move.setPrevious(originTargetPrevious);
         move.setNext(target);
+    }
+
+    @Override
+    public void changeStatus(CustomUserDetails userDetails, Long queueId, String status) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+
+        Optional<Queue> optionalQueue = queueRepository.findById(queueId);
+        Queue queue = optionalQueue.orElseThrow(() -> new RuntimeException("change status error::queue id:" + queueId));
+
+        if (!queue.getLine().getUser().equals(user)) {
+            throw new RuntimeException("Not match User::change status::try user=" + user.getEmail() + ", origin user=" + queue.getLine().getUser());
+        }
+
+        QueueStatus queueStatus = QueueStatus.convertStatus(status);
+        queue.setStatus(queueStatus);
     }
 
 }
