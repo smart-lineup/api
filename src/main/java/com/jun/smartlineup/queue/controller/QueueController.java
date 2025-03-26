@@ -1,6 +1,7 @@
 package com.jun.smartlineup.queue.controller;
 
 import com.jun.smartlineup.queue.domain.Queue;
+import com.jun.smartlineup.queue.dto.QueueAttendeeChangeRequestDto;
 import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
 import com.jun.smartlineup.queue.dto.QueueResponseDto;
 import com.jun.smartlineup.queue.service.QueueService;
@@ -58,6 +59,16 @@ public class QueueController {
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
         queueService.delete(user, queueId);
+        return ResponseEntity.ok("ok");
+    }
+
+    @PutMapping("/{id}/attendee")
+    public ResponseEntity<String> attendeeChange(@PathVariable("id") Long queueId,
+                                                 @Valid @RequestBody QueueAttendeeChangeRequestDto dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        
+        queueService.attendeeInfoChange(user, queueId, dto);
         return ResponseEntity.ok("ok");
     }
 }

@@ -1,9 +1,11 @@
 package com.jun.smartlineup.queue.service;
 
 import com.jun.smartlineup.attendee.domain.Attendee;
+import com.jun.smartlineup.attendee.repository.AttendeeRepository;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.queue.domain.QueueStatus;
+import com.jun.smartlineup.queue.dto.QueueAttendeeChangeRequestDto;
 import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
 import com.jun.smartlineup.queue.repository.QueueRepository;
 import com.jun.smartlineup.user.domain.User;
@@ -97,6 +99,11 @@ public class QueueServiceImpl implements QueueService {
             throw new RuntimeException("Wrong request::Not match User::request User::" + user + ", Line User::" + move.getLine().getUser());
         }
 
+        move.getPrevious().setNext(move.getNext());
+        move.getNext().setPrevious(move.getPrevious());
+
+//        target.setPrevious();
+        // from down to up
         if (dto.getMovedQueueId() < dto.getTargetQueueId()) {
             if (move.getNext() != null) {
                 move.getNext().setPrevious(move.getPrevious());
@@ -164,6 +171,16 @@ public class QueueServiceImpl implements QueueService {
         if (next != null) {
             next.setPrevious(previous);
         }
+    }
+
+    @Override
+    public void attendeeInfoChange(CustomUserDetails userDetails, Long queueId, QueueAttendeeChangeRequestDto dto) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+        Optional<Queue> optionalQueue = queueRepository.findByUserAndQueue_Id(user, queueId);
+        Queue queue = optionalQueue.orElseThrow(() -> new RuntimeException("Not match User and Queue::attendeeChange::user=" + user.getEmail() + ", queue=" + queueId));
+
+        Attendee attendee = queue.getAttendee();
+        attendee.changeInfo(dto.getName(), dto.getPhone(), dto.getInfo());
     }
 
 }

@@ -56,4 +56,10 @@ public class Attendee {
                 .phone(dto.getPhone())
                 .build();
     }
+
+    public void changeInfo(String name, String phone, String info) {
+        this.name = name;
+        this.phone = phone;
+        this.info = info;
+    }
 }
