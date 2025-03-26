@@ -98,8 +98,9 @@ public class QueueServiceImpl implements QueueService {
         }
 
         if (dto.getMovedQueueId() < dto.getTargetQueueId()) {
-            //1
-            move.getNext().setPrevious(move.getPrevious());
+            if (move.getNext() != null) {
+                move.getNext().setPrevious(move.getPrevious());
+            }
             if (move.getPrevious() != null) {
                 move.getPrevious().setNext(move.getNext());
             }
@@ -114,13 +115,20 @@ public class QueueServiceImpl implements QueueService {
             move.setNext(TargetNext);
             return;
         }
-        target.getPrevious().setNext(move);
-        move.getNext().setPrevious(move.getPrevious());
+
+        if (target.getPrevious() != null) {
+            target.getPrevious().setNext(move);
+        }
+        if (move.getNext() != null) {
+            move.getNext().setPrevious(move.getPrevious());
+        }
 
         Queue originTargetPrevious = target.getPrevious();
 
         target.setPrevious(move);
-        move.getPrevious().setNext(move.getNext());
+        if (move.getPrevious() != null) {
+            move.getPrevious().setNext(move.getNext());
+        }
 
         move.setPrevious(originTargetPrevious);
         move.setNext(target);
@@ -150,17 +158,11 @@ public class QueueServiceImpl implements QueueService {
         queue.setDeletedAt(LocalDateTime.now());
         Queue previous = queue.getPrevious();
         Queue next = queue.getNext();
-        if (previous != null && next != null) {
+        if (previous != null) {
             previous.setNext(next);
-            next.setPrevious(next);
-            return;
         }
-        if (previous == null && next != null) {
-            next.setPrevious(null);
-            return;
-        }
-        if (previous != null && next == null) {
-            previous.setNext(null);
+        if (next != null) {
+            next.setPrevious(previous);
         }
     }
 
