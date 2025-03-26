@@ -1,7 +1,6 @@
 package com.jun.smartlineup.queue.service;
 
 import com.jun.smartlineup.attendee.domain.Attendee;
-import com.jun.smartlineup.attendee.repository.AttendeeRepository;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.queue.domain.QueueStatus;
@@ -99,46 +98,34 @@ public class QueueServiceImpl implements QueueService {
             throw new RuntimeException("Wrong request::Not match User::request User::" + user + ", Line User::" + move.getLine().getUser());
         }
 
-        move.getPrevious().setNext(move.getNext());
-        move.getNext().setPrevious(move.getPrevious());
+        ChangeLikedListByReorder(dto, move, target);
+    }
 
-//        target.setPrevious();
-        // from down to up
-        if (dto.getMovedQueueId() < dto.getTargetQueueId()) {
-            if (move.getNext() != null) {
-                move.getNext().setPrevious(move.getPrevious());
-            }
-            if (move.getPrevious() != null) {
-                move.getPrevious().setNext(move.getNext());
-            }
-
-            Queue TargetNext = target.getNext();
-            if (target.getNext() != null) {
-                TargetNext.setPrevious(move);
-            }
-            target.setNext(move);
-
-            move.setPrevious(target);
-            move.setNext(TargetNext);
-            return;
-        }
-
-        if (target.getPrevious() != null) {
-            target.getPrevious().setNext(move);
+    private void ChangeLikedListByReorder(QueueReorderRequestDto dto, Queue move, Queue target) {
+        if (move.getPrevious() != null) {
+            move.getPrevious().setNext(move.getNext());
         }
         if (move.getNext() != null) {
             move.getNext().setPrevious(move.getPrevious());
         }
 
-        Queue originTargetPrevious = target.getPrevious();
-
-        target.setPrevious(move);
-        if (move.getPrevious() != null) {
-            move.getPrevious().setNext(move.getNext());
+        if ("up".equals(dto.getDirection())) {
+            Queue targetPrevious = target.getPrevious();
+            move.setPrevious(targetPrevious);
+            move.setNext(target);
+            if (targetPrevious != null) {
+                targetPrevious.setNext(move);
+            }
+            target.setPrevious(move);
+        } else {
+            Queue targetNext = target.getNext();
+            move.setPrevious(target);
+            move.setNext(targetNext);
+            target.setNext(move);
+            if (targetNext != null) {
+                targetNext.setPrevious(move);
+            }
         }
-
-        move.setPrevious(originTargetPrevious);
-        move.setNext(target);
     }
 
     @Override
