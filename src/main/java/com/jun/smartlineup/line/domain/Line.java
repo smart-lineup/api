@@ -3,10 +3,7 @@ package com.jun.smartlineup.line.domain;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -43,7 +40,13 @@ public class Line {
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    private LocalDateTime deleteAt;
+
     public void changeName(String name) {
         this.name = name;
+    }
+
+    public void delete() {
+        deleteAt = LocalDateTime.now();
     }
 }

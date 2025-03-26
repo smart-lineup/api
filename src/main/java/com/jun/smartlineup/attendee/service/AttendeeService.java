@@ -21,7 +21,7 @@ public class AttendeeService {
     private final QueueService queueService;
 
     public void add(AttendeeAddRequestDto dto) {
-        Optional<Line> optionalLine = lineRepository.findByUuid(dto.getUuid());
+        Optional<Line> optionalLine = lineRepository.findByUuidAndDeleteAtIsNull(dto.getUuid());
         Line line = optionalLine.orElseThrow(() -> new RuntimeException("No exist uuid: " + dto.getUuid()));
         Attendee attendee = Attendee.fromDto(line.getUser(), dto);
         attendeeRepository.save(attendee);

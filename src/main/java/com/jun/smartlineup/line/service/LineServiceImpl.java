@@ -3,7 +3,6 @@ package com.jun.smartlineup.line.service;
 import com.jun.smartlineup.exception.NoExistUserException;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.line.dto.LineChangeNameRequestDto;
-import com.jun.smartlineup.line.dto.LineRemoveRequestDto;
 import com.jun.smartlineup.line.dto.LineResponseDto;
 import com.jun.smartlineup.line.repository.LineRepository;
 import com.jun.smartlineup.user.domain.User;
@@ -11,7 +10,6 @@ import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,7 +38,7 @@ public class LineServiceImpl implements LineService {
         Optional<User> OptionalUser = userRepository.findByEmail(userDetails.getUsername());
         User user = OptionalUser.orElseThrow(NoExistUserException::new);
 
-        List<Line> linesByUser = lineRepository.getLinesByUser(user);
+        List<Line> linesByUser = lineRepository.getLinesByUserAndDeleteAtIsNull(user);
         return linesByUser.stream().map(LineResponseDto::fromEntity).toList();
     }
 
@@ -48,18 +46,18 @@ public class LineServiceImpl implements LineService {
         Optional<User> optionalUser = userRepository.findByEmail(userDetails.getUsername());
         User user = optionalUser.orElseThrow(NoExistUserException::new);
 
-        Optional<Line> optionalLine = lineRepository.getLineByIdAndUser(id, user);
+        Optional<Line> optionalLine = lineRepository.getLineByIdAndUserAndDeleteAtIsNull(id, user);
         Line line = optionalLine.orElseThrow(() ->
                 new RuntimeException("Remove error::No correct::" + user.getEmail() + "::" + id));
 
-        lineRepository.delete(line);
+        line.delete();
     }
 
     public void changeName(CustomUserDetails userDetails, LineChangeNameRequestDto dto) {
         Optional<User> OptionalUser = userRepository.findByEmail(userDetails.getUsername());
         User user = OptionalUser.orElseThrow(NoExistUserException::new);
 
-        Optional<Line> optionalLine = lineRepository.getLineByIdAndUser(dto.getId(), user);
+        Optional<Line> optionalLine = lineRepository.getLineByIdAndUserAndDeleteAtIsNull(dto.getId(), user);
         Line line = optionalLine.orElseThrow(() ->
                 new RuntimeException("Remove error::No correct::" + user.getEmail() + "::" + dto.getId()));
 
