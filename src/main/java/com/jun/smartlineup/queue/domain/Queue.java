@@ -45,6 +45,9 @@ public class Queue {
     @Setter
     private QueueStatus status = QueueStatus.WAITING;
 
+    @Setter
+    private LocalDateTime deletedAt;
+
     @Builder.Default
     @CreatedDate
     @Column(updatable = false)

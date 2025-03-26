@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,7 +66,7 @@ public class QueueServiceImpl implements QueueService {
 
     @Override
     public void addFromAttendee(Line line, Attendee attendee) {
-        Optional<Queue> optionalQueue = queueRepository.findFirstByLineOrderByIdDesc(line);
+        Optional<Queue> optionalQueue = queueRepository.findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line);
         Queue queue = Queue.createQueue(line, attendee);
         if (optionalQueue.isPresent()) {
             Queue previous = optionalQueue.get();
@@ -83,10 +84,10 @@ public class QueueServiceImpl implements QueueService {
 
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
-        Optional<Queue> optionalMoveQueue = queueRepository.findById(dto.getMovedQueueId());
+        Optional<Queue> optionalMoveQueue = queueRepository.findByUserAndQueue_Id(user, dto.getMovedQueueId());
         Queue move = optionalMoveQueue.orElseThrow(() -> new RuntimeException("Not exist Queue::" + dto.getMovedQueueId()));
 
-        Optional<Queue> optionalTargetQueue = queueRepository.findById(dto.getTargetQueueId());
+        Optional<Queue> optionalTargetQueue = queueRepository.findByUserAndQueue_Id(user, dto.getTargetQueueId());
         Queue target = optionalTargetQueue.orElseThrow(() -> new RuntimeException("Not exist Queue::" + dto.getTargetQueueId()));
 
         if (!move.getLine().getId().equals(dto.getLineId())) {
@@ -129,7 +130,7 @@ public class QueueServiceImpl implements QueueService {
     public void changeStatus(CustomUserDetails userDetails, Long queueId, String status) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
-        Optional<Queue> optionalQueue = queueRepository.findById(queueId);
+        Optional<Queue> optionalQueue = queueRepository.findByUserAndQueue_Id(user, queueId);
         Queue queue = optionalQueue.orElseThrow(() -> new RuntimeException("change status error::queue id:" + queueId));
 
         if (!queue.getLine().getUser().equals(user)) {
@@ -138,6 +139,29 @@ public class QueueServiceImpl implements QueueService {
 
         QueueStatus queueStatus = QueueStatus.convertStatus(status);
         queue.setStatus(queueStatus);
+    }
+
+    @Override
+    public void delete(CustomUserDetails userDetails, Long queueId) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+        Optional<Queue> optionalQueue = queueRepository.findByUserAndQueue_Id(user, queueId);
+        Queue queue = optionalQueue.orElseThrow(() -> new RuntimeException("Not match user and queue::user=" + user.getEmail() + ", queue=" + queueId));
+
+        queue.setDeletedAt(LocalDateTime.now());
+        Queue previous = queue.getPrevious();
+        Queue next = queue.getNext();
+        if (previous != null && next != null) {
+            previous.setNext(next);
+            next.setPrevious(next);
+            return;
+        }
+        if (previous == null && next != null) {
+            next.setPrevious(null);
+            return;
+        }
+        if (previous != null && next == null) {
+            previous.setNext(null);
+        }
     }
 
 }

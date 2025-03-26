@@ -12,9 +12,11 @@ import java.util.Optional;
 
 public interface QueueRepository extends JpaRepository<Queue, Long> {
 
-    @Query("SELECT q FROM Queue q WHERE q.line.id = :lineId AND q.line.user = :user")
+    @Query("SELECT q FROM Queue q WHERE q.line.id = :lineId AND q.line.user = :user AND q.deletedAt is null")
     List<Queue> findAllByUserAndLine_Id(@Param("user") User user, @Param("lineId") Long lineId);
 
-    Optional<Queue> findFirstByLineOrderByIdDesc(Line line);
+    Optional<Queue> findFirstByLineAndDeletedAtIsNullOrderByIdDesc(Line line);
 
+    @Query("SELECT q FROM Queue q WHERE q.line.user = :user AND q.id = :queueId And q.deletedAt is null")
+    Optional<Queue> findByUserAndQueue_Id(@Param("user") User user, @Param("queueId") Long queueId);
 }

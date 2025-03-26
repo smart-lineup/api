@@ -19,4 +19,6 @@ public interface QueueService {
     void reorder(CustomUserDetails userDetails, QueueReorderRequestDto dto);
 
     void changeStatus(CustomUserDetails userDetails, Long queueId, String status);
+
+    void delete(CustomUserDetails userDetails, Long queueId);
 }

@@ -51,4 +51,13 @@ public class QueueController {
         queueService.changeStatus(user, queueId, map.get("status"));
         return ResponseEntity.ok("ok");
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> delete(@PathVariable("id") Long queueId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+
+        queueService.delete(user, queueId);
+        return ResponseEntity.ok("ok");
+    }
 }
