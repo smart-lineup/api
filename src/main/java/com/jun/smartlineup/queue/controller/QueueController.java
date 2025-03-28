@@ -2,6 +2,7 @@ package com.jun.smartlineup.queue.controller;
 
 import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.queue.dto.QueueAttendeeChangeRequestDto;
+import com.jun.smartlineup.queue.dto.QueueBatchAddRequestDto;
 import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
 import com.jun.smartlineup.queue.dto.QueueResponseDto;
 import com.jun.smartlineup.queue.service.QueueService;
@@ -71,4 +72,14 @@ public class QueueController {
         queueService.attendeeInfoChange(user, queueId, dto);
         return ResponseEntity.ok("ok");
     }
+
+    @PostMapping("/batch-add")
+    public ResponseEntity<String> batchAdd(@Valid @RequestBody QueueBatchAddRequestDto dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+
+        queueService.batchAdd(user, dto);
+        return ResponseEntity.ok("ok");
+    }
+
 }

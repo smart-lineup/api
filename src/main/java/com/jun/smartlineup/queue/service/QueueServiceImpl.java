@@ -1,16 +1,21 @@
 package com.jun.smartlineup.queue.service;
 
 import com.jun.smartlineup.attendee.domain.Attendee;
+import com.jun.smartlineup.attendee.repository.AttendeeRepository;
 import com.jun.smartlineup.line.domain.Line;
+import com.jun.smartlineup.line.repository.LineRepository;
 import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.queue.domain.QueueStatus;
 import com.jun.smartlineup.queue.dto.QueueAttendeeChangeRequestDto;
+import com.jun.smartlineup.queue.dto.QueueBatchAddRequestDto;
 import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
 import com.jun.smartlineup.queue.repository.QueueRepository;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
 import com.jun.smartlineup.user.utils.UserUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +30,11 @@ import java.util.stream.Collectors;
 public class QueueServiceImpl implements QueueService {
     private final QueueRepository queueRepository;
     private final UserRepository userRepository;
+    private final LineRepository lineRepository;
+    private final AttendeeRepository attendeeRepository;
+
+    @PersistenceContext
+    EntityManager em;
 
     @Override
     public void save(Queue queue) {
@@ -168,6 +178,52 @@ public class QueueServiceImpl implements QueueService {
 
         Attendee attendee = queue.getAttendee();
         attendee.changeInfo(dto.getName(), dto.getPhone(), dto.getInfo());
+    }
+
+    // Todo. need to refactoring
+    @Transactional
+    public void batchAdd(CustomUserDetails userDetails, QueueBatchAddRequestDto dto) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+        Optional<Line> optionalLine = lineRepository.getLineByIdAndUserAndDeleteAtIsNull(dto.getLineId(), user);
+        Line line = optionalLine.orElseThrow(() -> new RuntimeException("Not Exist Line::batchAdd::user=" + user.getEmail() + ", lineId=" + dto.getLineId()));
+
+        List<Attendee> attendees = dto.getAttendees().stream()
+                .map(a -> a.toEntity(user))
+                .toList();
+
+        int size = 50;
+        for (int i = 0; i < attendees.size(); i += size) {
+            List<Attendee> attendeeChunk = attendees.subList(i, Math.min(i + size, attendees.size()));
+            attendeeRepository.saveAllAndFlush(attendeeChunk);
+
+            Queue lastQueueBeforeChunk = queueRepository
+                    .findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line)
+                    .orElse(null);
+
+            List<Queue> queueChunk = buildQueuesWithLinks(attendeeChunk, line, lastQueueBeforeChunk);
+
+            if (lastQueueBeforeChunk != null) {
+                queueRepository.save(lastQueueBeforeChunk);
+            }
+
+            queueRepository.saveAllAndFlush(queueChunk);
+            em.flush();
+            em.clear();
+        }
+    }
+
+    private List<Queue> buildQueuesWithLinks(List<Attendee> attendees, Line line, Queue previous) {
+        List<Queue> queueList = new ArrayList<>();
+        for (Attendee attendee : attendees) {
+            Queue queue = Queue.createQueue(line, attendee);
+            if (previous != null) {
+                queue.setPrevious(previous);
+                previous.setNext(queue);
+            }
+            previous = queue;
+            queueList.add(queue);
+        }
+        return queueList;
     }
 
 }
