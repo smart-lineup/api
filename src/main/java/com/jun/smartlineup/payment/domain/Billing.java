@@ -1,11 +1,14 @@
 package com.jun.smartlineup.payment.domain;
 
+import com.jun.smartlineup.payment.dto.BillingIssueKeyResponseDto;
+import com.jun.smartlineup.payment.dto.PaymentInfoDto;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,8 +27,9 @@ public class Billing {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, length = 255)
     private String billingKey;  // Toss에서 받은 billingKey
+
+    private String customerKey;  // Toss에서 받은 customerKey
 
     @Setter
     @Builder.Default
@@ -36,17 +40,21 @@ public class Billing {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentProvider = PaymentMethod.TOSS;
 
-    @Column(nullable = false)
-    private LocalDateTime startedAt;
+    @Enumerated(EnumType.STRING)
+    private PlanType planType;
+
+    private LocalDate startedAt;
+
+    private LocalDate endedAt;
 
     @Column(nullable = false)
-    private LocalDateTime endedAt;
-
-    @Column(nullable = false)
+    @Builder.Default
     private Boolean renewal = true;
 
-    @Column(nullable = false)
-    private Integer price;
+    private Long price;
+
+    @Column(length = 4)
+    private String cardLastNumber;
 
     @Builder.Default
     @CreatedDate
@@ -56,4 +64,26 @@ public class Billing {
     @Builder.Default
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public void changeInfo(PaymentInfoDto dto) {
+        this.price = dto.getPrice();
+        this.planType = dto.getPlanType();
+    }
+
+    public void issueKey(BillingIssueKeyResponseDto dto) {
+        this.billingKey = dto.getBillingKey();
+        this.customerKey = dto.getCustomerKey();
+        this.cardLastNumber = dto.getCardNumber().substring(dto.getCardNumber().length() - 4);
+        this.paymentProvider = PaymentMethod.TOSS;
+        this.status = BillingStatus.CANCEL;
+    }
+
+    public void subscribe() {
+        LocalDate today = LocalDate.now();
+        if (endedAt == null || endedAt.isBefore(LocalDate.now())) {
+            startedAt = today;
+            endedAt = today.plusMonths(planType.getMonth());
+        }
+        status = BillingStatus.ACTIVE;
+    }
 }

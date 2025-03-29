@@ -1,6 +1,7 @@
 package com.jun.smartlineup.payment.domain;
 
 
+import com.jun.smartlineup.payment.dto.TossPaymentResponseDto;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,7 +34,7 @@ public class Purchase {
     private Billing billing;
 
     @Column(nullable = false)
-    private Integer amount;
+    private Long amount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -41,6 +42,10 @@ public class Purchase {
 
     @Column(nullable = false, length = 255)
     private String transactionId;
+
+    private String paymentKey;
+
+    private String mid;
 
     @Enumerated(EnumType.STRING)
     private PayStatus status;
@@ -53,4 +58,17 @@ public class Purchase {
     @Builder.Default
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public static Purchase successWithToss(User user, Billing billing, TossPaymentResponseDto dto) {
+        return Purchase.builder()
+                .user(user)
+                .billing(billing)
+                .amount(billing.getPrice())
+                .paymentMethod(PaymentMethod.TOSS)
+                .transactionId(dto.getOrderId())
+                .paymentKey(dto.getPaymentKey())
+                .mid(dto.getMId())
+                .status(PayStatus.SUCCESS)
+                .build();
+    }
 }
