@@ -46,6 +46,9 @@ public class User {
 
     private String verificationToken;
 
+    @Column(nullable = false, unique = true, length = 36)
+    private String uuid;
+
     @Builder.Default
     @CreatedDate
     @Column(updatable = false)

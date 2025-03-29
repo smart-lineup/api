@@ -7,11 +7,9 @@ import com.jun.smartlineup.exception.NoExistUserException;
 import com.jun.smartlineup.exception.NotVerifyUserException;
 import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
-import com.jun.smartlineup.user.dto.LoginRequestDto;
-import com.jun.smartlineup.user.dto.OAuth2UserImpl;
-import com.jun.smartlineup.user.dto.OAuthAttributes;
-import com.jun.smartlineup.user.dto.SignupRequestDto;
+import com.jun.smartlineup.user.dto.*;
 import com.jun.smartlineup.user.repository.UserRepository;
+import com.jun.smartlineup.user.utils.UserUtil;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +68,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                         .role(Role.USER)
                         .isOAuthLogin(true)
                         .isVerified(true)
+                        .uuid(UUID.randomUUID().toString())
                         .build()
                 );
 
@@ -96,6 +95,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                 .role(Role.USER)
                 .isVerified(false)
                 .verificationToken(verificationToken)
+                .uuid(UUID.randomUUID().toString())
                 .build();
 
         userRepository.save(user);
@@ -134,5 +134,10 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
     public User findByEmail(String email) {
         Optional<User> user = userRepository.findByEmail(email);
         return user.orElseThrow(NoExistUserException::new);
+    }
+
+    public UserUuidResponseDto uuid(CustomUserDetails userDetails) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+        return new UserUuidResponseDto(user.getUuid());
     }
 }

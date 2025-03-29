@@ -2,6 +2,7 @@ package com.jun.smartlineup.user.controller;
 
 import com.jun.smartlineup.config.auth.JwtTokenProvider;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
+import com.jun.smartlineup.user.dto.UserUuidResponseDto;
 import com.jun.smartlineup.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,8 +24,6 @@ public class UserController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
 
-
-
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
         ResponseCookie responseCookie = jwtTokenProvider.cookieFactory("", 0);
@@ -33,5 +32,14 @@ public class UserController {
         // Clear the security context
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok("logout success");
+    }
+
+
+    @GetMapping("/uuid")
+    public ResponseEntity<UserUuidResponseDto> uuid() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+
+        return ResponseEntity.ok(userService.uuid(user));
     }
 }

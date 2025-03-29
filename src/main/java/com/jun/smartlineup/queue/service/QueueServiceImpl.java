@@ -6,6 +6,7 @@ import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.line.repository.LineRepository;
 import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.queue.domain.QueueStatus;
+import com.jun.smartlineup.queue.dto.QueueAddRequestDto;
 import com.jun.smartlineup.queue.dto.QueueAttendeeChangeRequestDto;
 import com.jun.smartlineup.queue.dto.QueueBatchAddRequestDto;
 import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
@@ -224,6 +225,26 @@ public class QueueServiceImpl implements QueueService {
             queueList.add(queue);
         }
         return queueList;
+    }
+
+    public void addQueueByUser(CustomUserDetails userDetails, QueueAddRequestDto dto) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+        Optional<Line> optionalLine = lineRepository.getLineByIdAndUserAndDeleteAtIsNull(dto.getLineId(), user);
+        Line line = optionalLine.orElseThrow(() -> new RuntimeException("Not Exist Line::addQueueByUser::user=" + user.getEmail() + ", lineId=" + dto.getLineId()));
+
+        Attendee attendee = dto.getAttendee().toEntity(user);
+        attendeeRepository.save(attendee);
+
+        Optional<Queue> optionalPrevious = queueRepository.findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line);
+
+        Queue queue = Queue.createQueue(line, attendee);
+        if (optionalPrevious.isPresent()) {
+            Queue previous = optionalPrevious.get();
+
+            queue.setPrevious(previous);
+            previous.setNext(queue);
+        }
+        queueRepository.save(queue);
     }
 
 }
