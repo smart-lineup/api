@@ -1,8 +1,6 @@
 package com.jun.smartlineup.payment.service;
 
 import com.jun.smartlineup.payment.domain.Billing;
-import com.jun.smartlineup.payment.domain.BillingStatus;
-import com.jun.smartlineup.payment.domain.PaymentMethod;
 import com.jun.smartlineup.payment.domain.Purchase;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
@@ -12,6 +10,7 @@ import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
 import com.jun.smartlineup.user.utils.UserUtil;
 import com.jun.smartlineup.utils.WebUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -32,6 +30,7 @@ public class PaymentService {
     @Value("${payment.toss.secret-key}")
     private String tossSecretKey;
 
+    @Transactional
     public void issueKey(CustomUserDetails userDetails, BillingKeyRequestDto dto) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
@@ -53,6 +52,7 @@ public class PaymentService {
         billingRepository.save(billing);
     }
 
+    @Transactional
     public void payInfo(CustomUserDetails userDetails, PaymentInfoDto dto) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
@@ -74,6 +74,7 @@ public class PaymentService {
         return paymentExistDto;
     }
 
+    @Transactional
     public void pay(CustomUserDetails userDetails) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
