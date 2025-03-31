@@ -13,7 +13,6 @@ import com.jun.smartlineup.utils.WebUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -36,10 +35,15 @@ public class PaymentService {
 
         String tossUrl = "https://api.tosspayments.com/v1/billing/authorizations/issue";
         String secretKey = Base64.getEncoder().encodeToString((tossSecretKey + ":").getBytes(StandardCharsets.UTF_8));
-        BillingIssueKeyResponseDto responseDto = WebUtil.postWithJson(tossUrl,
+        ApiResult<BillingIssueKeyResponseDto> apiResult = WebUtil.postTossWithJson(tossUrl,
                 secretKey,
                 dto,
-                new ParameterizedTypeReference<>() {});
+                BillingIssueKeyResponseDto.class);
+
+        if (!apiResult.isSuccess()) {
+            // todo
+        }
+        BillingIssueKeyResponseDto responseDto = apiResult.getData();
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
         Billing billing = optionalBilling.orElse(Billing.builder()
@@ -63,7 +67,7 @@ public class PaymentService {
         billingRepository.save(billing);
     }
 
-    public PaymentExistDto exist(CustomUserDetails userDetails) {
+    public PaymentExistDto beforePayInfo(CustomUserDetails userDetails) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
@@ -71,6 +75,7 @@ public class PaymentService {
 
         PaymentExistDto paymentExistDto = new PaymentExistDto();
         paymentExistDto.setIsExist(billing.getBillingKey() != null);
+        paymentExistDto.setCardLastNumber(billing.getCardLastNumber());
         return paymentExistDto;
     }
 
@@ -94,11 +99,15 @@ public class PaymentService {
                 .taxFreeAmount(0L)
                 .build();
 
-
-        TossPaymentResponseDto responseDto = WebUtil.postWithJson(url,
+        ApiResult<TossPaymentResponseDto> apiResult = WebUtil.postTossWithJson(url,
                 secretKey,
                 dto,
-                new ParameterizedTypeReference<>() {});
+                TossPaymentResponseDto.class);
+
+        if (!apiResult.isSuccess()) {
+            // todo
+        }
+        TossPaymentResponseDto responseDto = apiResult.getData();
 
         Purchase purchase = Purchase.successWithToss(user, billing, responseDto);
         purchaseRepository.save(purchase);

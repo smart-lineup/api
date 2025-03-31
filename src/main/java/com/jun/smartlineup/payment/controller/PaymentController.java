@@ -36,10 +36,10 @@ public class PaymentController {
         return ResponseEntity.ok("ok");
     }
 
-    @GetMapping("/exist")
-    public ResponseEntity<PaymentExistDto> exist() {
+    @GetMapping("/before/info")
+    public ResponseEntity<PaymentExistDto> beforeInfo() {
         CustomUserDetails userDetails = UserUtil.getUserDetails();
-        return ResponseEntity.ok(paymentService.exist(userDetails));
+        return ResponseEntity.ok(paymentService.beforePayInfo(userDetails));
     }
 
     @PostMapping("/pay")
