@@ -12,6 +12,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class Purchase {
+public class PaymentTransaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,21 +37,32 @@ public class Purchase {
     private Billing billing;
 
     @Column(nullable = false)
-    private Long amount;
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentMethod paymentMethod;
 
+    // for fail
     @Column(nullable = false, length = 255)
     private String transactionId;
+
+    private String orderId;
 
     private String paymentKey;
 
     private String mid;
 
+    private String receiptUrl;
+
     @Enumerated(EnumType.STRING)
     private PayStatus status;
+
+    private LocalDateTime cancelAt;
+
+    private String cancelReason;
+
+    private BigDecimal cancelAmount;
 
     @Builder.Default
     @CreatedDate
@@ -61,13 +73,13 @@ public class Purchase {
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public static Purchase successWithToss(User user, Billing billing, TossPaymentResponseDto dto) {
-        return Purchase.builder()
+    public static PaymentTransaction successWithToss(User user, Billing billing, TossPaymentResponseDto dto) {
+        return PaymentTransaction.builder()
                 .user(user)
                 .billing(billing)
                 .amount(billing.getPrice())
                 .paymentMethod(PaymentMethod.TOSS)
-                .transactionId(dto.getOrderId())
+                .orderId(dto.getOrderId())
                 .paymentKey(dto.getPaymentKey())
                 .mid(dto.getMId())
                 .status(PayStatus.SUCCESS)

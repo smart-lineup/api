@@ -1,7 +1,7 @@
 package com.jun.smartlineup.payment.service;
 
 import com.jun.smartlineup.payment.domain.Billing;
-import com.jun.smartlineup.payment.domain.Purchase;
+import com.jun.smartlineup.payment.domain.PaymentTransaction;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
 import com.jun.smartlineup.payment.repository.PurchaseRepository;
@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
@@ -40,8 +41,8 @@ public class PaymentService {
                 dto,
                 BillingIssueKeyResponseDto.class);
 
-        if (!apiResult.isSuccess()) {
-            // todo
+        if (apiResult.isFail()) {
+
         }
         BillingIssueKeyResponseDto responseDto = apiResult.getData();
 
@@ -96,7 +97,7 @@ public class PaymentService {
                 .orderName("Smart Line up " + billing.getPlanType().getKorean() + " 구독")
                 .customerEmail(user.getEmail())
                 .customerName(user.getName())
-                .taxFreeAmount(0L)
+                .taxFreeAmount(BigDecimal.valueOf(0))
                 .build();
 
         ApiResult<TossPaymentResponseDto> apiResult = WebUtil.postTossWithJson(url,
@@ -104,13 +105,14 @@ public class PaymentService {
                 dto,
                 TossPaymentResponseDto.class);
 
-        if (!apiResult.isSuccess()) {
-            // todo
+        if (apiResult.isFail()) {
+
+            return;
         }
         TossPaymentResponseDto responseDto = apiResult.getData();
 
-        Purchase purchase = Purchase.successWithToss(user, billing, responseDto);
-        purchaseRepository.save(purchase);
+        PaymentTransaction paymentTransaction = PaymentTransaction.successWithToss(user, billing, responseDto);
+        purchaseRepository.save(paymentTransaction);
 
         billing.subscribe();
     }

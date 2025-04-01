@@ -4,10 +4,12 @@ import com.jun.smartlineup.payment.domain.PlanType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class PaymentInfoDto {
     @NotNull
-    private Long price;
+    private BigDecimal price;
     @NotNull
     private PlanType planType;
 }

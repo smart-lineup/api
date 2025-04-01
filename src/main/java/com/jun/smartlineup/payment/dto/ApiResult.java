@@ -21,6 +21,10 @@ public class ApiResult<T> {
         return error == null;
     }
 
+    public boolean isFail() {
+        return error != null;
+    }
+
     public T getData() {
         return data;
     }
