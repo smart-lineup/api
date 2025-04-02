@@ -5,6 +5,7 @@ import com.jun.smartlineup.payment.domain.PaymentTransaction;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
 import com.jun.smartlineup.payment.repository.PurchaseRepository;
+import com.jun.smartlineup.payment.util.TossFailUtil;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
@@ -81,7 +82,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public void pay(CustomUserDetails userDetails) {
+    public PayResponseDto pay(CustomUserDetails userDetails) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
@@ -106,8 +107,24 @@ public class PaymentService {
                 TossPaymentResponseDto.class);
 
         if (apiResult.isFail()) {
+            TossFailDto error = apiResult.getError();
+            TossFailDto.ErrorDetail detail = error.getError();
+            if (TossFailUtil.isFailBaseOnUser(detail.getCode())) {
+                // have to notify to user what cause error
+                return PayResponseDto.builder()
+                        .isSuccess(false)
+                        .code("400")
+                        .message(TossFailUtil.getMessageBasedOnCode(detail.getCode()))
+                        .build();
+            }
 
-            return;
+            // we just notify error without details.
+            // developer should check always this part
+            return PayResponseDto.builder()
+                    .isSuccess(false)
+                    .code("400")
+                    .message("예기치 못한 에러가 발생하였습니다. 운영자에게 연락 부탁드립니다.")
+                    .build();
         }
         TossPaymentResponseDto responseDto = apiResult.getData();
 
@@ -115,5 +132,12 @@ public class PaymentService {
         purchaseRepository.save(paymentTransaction);
 
         billing.subscribe();
+        return PayResponseDto.builder()
+                .isSuccess(true)
+                .code("200")
+                .message("ok")
+                .build();
     }
+
+
 }

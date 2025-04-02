@@ -1,6 +1,7 @@
 package com.jun.smartlineup.payment.controller;
 
 import com.jun.smartlineup.payment.dto.BillingKeyRequestDto;
+import com.jun.smartlineup.payment.dto.PayResponseDto;
 import com.jun.smartlineup.payment.dto.PaymentExistDto;
 import com.jun.smartlineup.payment.dto.PaymentInfoDto;
 import com.jun.smartlineup.payment.service.PaymentService;
@@ -43,9 +44,9 @@ public class PaymentController {
     }
 
     @PostMapping("/pay")
-    public ResponseEntity<String> pay() {
+    public ResponseEntity<PayResponseDto> pay() {
         CustomUserDetails userDetails = UserUtil.getUserDetails();
-        paymentService.pay(userDetails);
-        return ResponseEntity.ok("ok");
+        PayResponseDto payDto = paymentService.pay(userDetails);
+        return ResponseEntity.ok(payDto);
     }
 }

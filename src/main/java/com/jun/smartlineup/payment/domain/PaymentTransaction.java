@@ -82,6 +82,7 @@ public class PaymentTransaction {
                 .orderId(dto.getOrderId())
                 .paymentKey(dto.getPaymentKey())
                 .mid(dto.getMId())
+                .receiptUrl(dto.getReceiptUrl())
                 .status(PayStatus.SUCCESS)
                 .build();
     }
