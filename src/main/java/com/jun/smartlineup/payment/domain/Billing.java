@@ -89,4 +89,9 @@ public class Billing {
         }
         status = BillingStatus.ACTIVE;
     }
+
+    public void changePlanType(PlanType planType) {
+        this.planType = planType;
+        this.status = BillingStatus.ACTIVE;
+    }
 }

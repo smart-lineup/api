@@ -1,14 +1,12 @@
 package com.jun.smartlineup.payment.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class TossFailDto {
     private String version;
 
@@ -20,6 +18,7 @@ public class TossFailDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @ToString
     public static class ErrorDetail {
         private String code;
         private String message;

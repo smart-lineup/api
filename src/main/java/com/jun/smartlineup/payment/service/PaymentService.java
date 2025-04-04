@@ -4,7 +4,7 @@ import com.jun.smartlineup.payment.domain.Billing;
 import com.jun.smartlineup.payment.domain.PaymentTransaction;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
-import com.jun.smartlineup.payment.repository.PurchaseRepository;
+import com.jun.smartlineup.payment.repository.PaymentTransactionRepository;
 import com.jun.smartlineup.payment.util.TossFailUtil;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -26,7 +27,7 @@ import java.util.Optional;
 public class PaymentService {
     private final BillingRepository billingRepository;
     private final UserRepository userRepository;
-    private final PurchaseRepository purchaseRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
 
     @Value("${payment.toss.secret-key}")
     private String tossSecretKey;
@@ -69,16 +70,16 @@ public class PaymentService {
         billingRepository.save(billing);
     }
 
-    public PaymentExistDto beforePayInfo(CustomUserDetails userDetails) {
+    public PaymentExistDto existPayInfo(CustomUserDetails userDetails) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
-        Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible situation::exist::user=" + user.getEmail()));
+        Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible request::exist::user=" + user.getEmail()));
 
-        PaymentExistDto paymentExistDto = new PaymentExistDto();
-        paymentExistDto.setIsExist(billing.getBillingKey() != null);
-        paymentExistDto.setCardLastNumber(billing.getCardLastNumber());
-        return paymentExistDto;
+        if (billing.getEndedAt() != null) {
+            return PaymentExistDto.exist(billing);
+        }
+        return PaymentExistDto.notExist();
     }
 
     @Transactional
@@ -86,7 +87,10 @@ public class PaymentService {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
-        Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible situation::pay::user=" + user.getEmail()));
+        Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible request::pay::user=" + user.getEmail()));
+        if (billing.getEndedAt() != null && billing.getEndedAt().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Impossible to call api::pay::user=" + user.getEmail());
+        }
 
         String url = "https://api.tosspayments.com/v1/billing/" + billing.getBillingKey();
         String secretKey = Base64.getEncoder().encodeToString((tossSecretKey + ":").getBytes());
@@ -108,9 +112,10 @@ public class PaymentService {
 
         if (apiResult.isFail()) {
             TossFailDto error = apiResult.getError();
+            System.out.println(apiResult);
             TossFailDto.ErrorDetail detail = error.getError();
+            // add logging
             if (TossFailUtil.isFailBaseOnUser(detail.getCode())) {
-                // have to notify to user what cause error
                 return PayResponseDto.builder()
                         .isSuccess(false)
                         .code("400")
@@ -118,18 +123,16 @@ public class PaymentService {
                         .build();
             }
 
-            // we just notify error without details.
-            // developer should check always this part
             return PayResponseDto.builder()
                     .isSuccess(false)
-                    .code("400")
-                    .message("예기치 못한 에러가 발생하였습니다. 운영자에게 연락 부탁드립니다.")
+                    .code("500")
+                    .message("예기치 못한 에러가 발생하였습니다. 문의 부탁드립니다.")
                     .build();
         }
         TossPaymentResponseDto responseDto = apiResult.getData();
 
         PaymentTransaction paymentTransaction = PaymentTransaction.successWithToss(user, billing, responseDto);
-        purchaseRepository.save(paymentTransaction);
+        paymentTransactionRepository.save(paymentTransaction);
 
         billing.subscribe();
         return PayResponseDto.builder()
@@ -139,5 +142,13 @@ public class PaymentService {
                 .build();
     }
 
+    @Transactional
+    public void changePlanType(CustomUserDetails userDetails, BillingPlanTypeRequestDto dto) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
 
+        Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
+        Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible request::changePlanType::user=" + user.getEmail()));
+
+        billing.changePlanType(dto.getPlanType());
+    }
 }

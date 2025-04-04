@@ -10,7 +10,7 @@ public class TossFailUtil {
 
     public static String getMessageBasedOnCode(String code) {
         Map<String, String> failMap = getFailMap();
-        return failMap.getOrDefault(code, "예기치 못한 에러가 발생하였습니다. 지속적 발생시 연락주세요.");
+        return failMap.getOrDefault(code, "예기치 못한 에러가 발생하였습니다. 문의 부탁드립니다.");
     }
 
     private static Map<String, String> getFailMap() {

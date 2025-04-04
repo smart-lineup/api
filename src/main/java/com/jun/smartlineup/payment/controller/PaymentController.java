@@ -1,9 +1,6 @@
 package com.jun.smartlineup.payment.controller;
 
-import com.jun.smartlineup.payment.dto.BillingKeyRequestDto;
-import com.jun.smartlineup.payment.dto.PayResponseDto;
-import com.jun.smartlineup.payment.dto.PaymentExistDto;
-import com.jun.smartlineup.payment.dto.PaymentInfoDto;
+import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.service.PaymentService;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.utils.UserUtil;
@@ -11,10 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -37,10 +31,10 @@ public class PaymentController {
         return ResponseEntity.ok("ok");
     }
 
-    @GetMapping("/before/info")
-    public ResponseEntity<PaymentExistDto> beforeInfo() {
+    @GetMapping("/info")
+    public ResponseEntity<PaymentExistDto> payInfo() {
         CustomUserDetails userDetails = UserUtil.getUserDetails();
-        return ResponseEntity.ok(paymentService.beforePayInfo(userDetails));
+        return ResponseEntity.ok(paymentService.existPayInfo(userDetails));
     }
 
     @PostMapping("/pay")
@@ -48,5 +42,12 @@ public class PaymentController {
         CustomUserDetails userDetails = UserUtil.getUserDetails();
         PayResponseDto payDto = paymentService.pay(userDetails);
         return ResponseEntity.ok(payDto);
+    }
+
+    @PutMapping("/plan-type")
+    public ResponseEntity<String> changePlanType(@Valid @RequestBody BillingPlanTypeRequestDto dto) {
+        paymentService.changePlanType(UserUtil.getUserDetails(), dto);
+
+        return ResponseEntity.ok("ok");
     }
 }

@@ -44,7 +44,6 @@ public class PaymentTransaction {
     private PaymentMethod paymentMethod;
 
     // for fail
-    @Column(nullable = false, length = 255)
     private String transactionId;
 
     private String orderId;

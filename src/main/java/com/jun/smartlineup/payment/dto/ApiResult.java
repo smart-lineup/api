@@ -1,5 +1,8 @@
 package com.jun.smartlineup.payment.dto;
 
+import lombok.ToString;
+
+@ToString
 public class ApiResult<T> {
     private final T data;
     private final TossFailDto error;
