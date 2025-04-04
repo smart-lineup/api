@@ -37,7 +37,7 @@ public class Billing {
     @Setter
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    private BillingStatus status = BillingStatus.ACTIVE;
+    private BillingStatus status = BillingStatus.NONE;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -52,7 +52,7 @@ public class Billing {
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean renewal = true;
+    private Boolean renewal = false;
 
     private BigDecimal price;
 
@@ -88,10 +88,11 @@ public class Billing {
             endedAt = today.plusMonths(planType.getMonth());
         }
         status = BillingStatus.ACTIVE;
+        renewal = true;
     }
 
     public void changePlanType(PlanType planType) {
         this.planType = planType;
-        this.status = BillingStatus.ACTIVE;
+        this.renewal = true;
     }
 }

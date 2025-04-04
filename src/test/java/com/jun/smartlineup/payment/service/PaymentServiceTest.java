@@ -10,10 +10,7 @@ import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
 import com.jun.smartlineup.utils.WebUtil;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -25,6 +22,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -138,8 +136,38 @@ public class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("Test beforePayInfo: Returns correct payment existence status")
-    void testBeforePayInfo() {
+    @DisplayName("Test beforePayInfo: Returns Exist Full data dto")
+    void testPayInfoExist() {
+        User user = createTestUser();
+        CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
+
+        Billing billing = Billing.builder()
+                .user(user)
+                .cardLastNumber("111*")
+                .billingKey("dummy-billing-key")
+                .customerKey("dummy-customer-key")
+                .price(BigDecimal.valueOf(9900))
+                .planType(PlanType.MONTHLY)
+                .startedAt(LocalDate.now())
+                .endedAt(LocalDate.now().plusDays(1))
+                .build();
+        billingRepository.save(billing);
+
+        // Act
+        PaymentExistDto existDto = paymentService.existPayInfo(userDetails);
+
+        // Assert
+        assertTrue(existDto.getIsExist());
+        assertNotNull(existDto.getCardLastNumber());
+        assertNotNull(existDto.getIsSubscribe());
+        assertNotNull(existDto.getEndAt());
+        assertNotNull(existDto.getPlanType());
+        assertNotNull(existDto.getStatus());
+    }
+
+    @Test
+    @DisplayName("Test beforePayInfo: Returns Not Exist data dto")
+    void testPayInfoNotExist() {
         User user = createTestUser();
         CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
 
@@ -152,6 +180,10 @@ public class PaymentServiceTest {
         // Assert
         assertFalse(existDto.getIsExist());
         assertNull(existDto.getCardLastNumber());
+        assertNull(existDto.getIsSubscribe());
+        assertNull(existDto.getEndAt());
+        assertNull(existDto.getPlanType());
+        assertNull(existDto.getStatus());
     }
 
     @Test
@@ -164,8 +196,9 @@ public class PaymentServiceTest {
                 .user(user)
                 .billingKey("dummy-billing-key")
                 .customerKey("dummy-customer-key")
-                .price(BigDecimal.valueOf(15000))
+                .price(BigDecimal.valueOf(9900))
                 .planType(PlanType.MONTHLY)
+                .startedAt(LocalDate.now())
                 .endedAt(LocalDate.now().plusDays(1))
                 .build();
         billingRepository.save(billing);
@@ -195,9 +228,9 @@ public class PaymentServiceTest {
 
         assertEquals(1, paymentTransactionRepository.count(), "One payment transaction should be saved");
 
-        Optional<Billing> optBilling = billingRepository.getBillingByUser(user);
-        assertTrue(optBilling.isPresent(), "Billing should be present");
-        Billing updatedBilling = optBilling.get();
+        Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
+        assertTrue(optionalBilling.isPresent(), "Billing should be present");
+        Billing updatedBilling = optionalBilling.get();
         assertEquals("ACTIVE", updatedBilling.getStatus().name());
     }
 
@@ -212,8 +245,9 @@ public class PaymentServiceTest {
                 .user(user)
                 .billingKey("dummy-billing-key")
                 .customerKey("dummy-customer-key")
-                .price(BigDecimal.valueOf(15000))
+                .price(BigDecimal.valueOf(9900))
                 .planType(PlanType.MONTHLY)
+                .startedAt(LocalDate.now())
                 .endedAt(LocalDate.now().minusDays(1L))
                 .build();
         billingRepository.save(billing);
@@ -237,8 +271,9 @@ public class PaymentServiceTest {
                 .user(user)
                 .billingKey("dummy-billing-key")
                 .customerKey("dummy-customer-key")
-                .price(BigDecimal.valueOf(15000))
+                .price(BigDecimal.valueOf(9900))
                 .planType(PlanType.MONTHLY)
+                .startedAt(LocalDate.now())
                 .endedAt(LocalDate.now().plusDays(1))
                 .build();
         billingRepository.save(billing);
@@ -279,7 +314,7 @@ public class PaymentServiceTest {
                 .user(user)
                 .billingKey("dummy-billing-key")
                 .customerKey("dummy-customer-key")
-                .price(BigDecimal.valueOf(15000))
+                .price(BigDecimal.valueOf(9900))
                 .planType(PlanType.MONTHLY)
                 .endedAt(LocalDate.now().plusDays(1))
                 .build();
@@ -308,5 +343,78 @@ public class PaymentServiceTest {
         assertFalse(response.getIsSuccess(), "Payment should fail due to unexpected error");
         assertEquals("500", response.getCode());
         assertEquals("예기치 못한 에러가 발생하였습니다. 문의 부탁드립니다.", response.getMessage());
+    }
+
+    @Test
+    @DisplayName("plan-type test: request plan type changed")
+    void testPlanTypeSuccess() {
+        User user = createTestUser();
+        CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
+
+        Billing billing = Billing.builder()
+                .user(user)
+                .billingKey("dummy-billing-key")
+                .customerKey("dummy-customer-key")
+                .price(BigDecimal.valueOf(9900))
+                .planType(PlanType.MONTHLY)
+                .startedAt(LocalDate.now())
+                .renewal(false)
+                .endedAt(LocalDate.now().plusMonths(1))
+                .build();
+
+        billingRepository.save(billing);
+
+        BillingPlanTypeRequestDto billingPlanTypeRequestDto = new BillingPlanTypeRequestDto();
+        billingPlanTypeRequestDto.setPlanType(PlanType.ANNUAL);
+
+        //Act
+        paymentService.changePlanType(userDetails, billingPlanTypeRequestDto);
+
+        //Assert
+        Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
+        assertTrue(optionalBilling.isPresent(), "Billing should be present");
+        Billing updateBilling = optionalBilling.get();
+        assertEquals(PlanType.ANNUAL, updateBilling.getPlanType());
+        assertEquals(true, updateBilling.getRenewal());
+    }
+
+    @Test
+    @DisplayName("plan-type test: if endAt don't exist when request")
+    void testPlanTypeFail_endAtDontExist() {
+        User user = createTestUser();
+        CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
+
+        Billing billing = Billing.builder()
+                .user(user)
+                .build();
+        PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
+        paymentInfoDto.setPlanType(PlanType.MONTHLY);
+        paymentInfoDto.setPrice(BigDecimal.valueOf(9900));
+        billing.changeInfo(paymentInfoDto);
+
+        billingRepository.save(billing);
+
+        BillingPlanTypeRequestDto billingPlanTypeRequestDto = new BillingPlanTypeRequestDto();
+        billingPlanTypeRequestDto.setPlanType(PlanType.ANNUAL);
+
+        //Act
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {
+            paymentService.changePlanType(userDetails, billingPlanTypeRequestDto);
+        });
+
+        //Assert
+        assertEquals("Impossible request::changePlanType::user=test@test.com", runtimeException.getMessage());
+    }
+
+    @Test
+    @DisplayName("pay test: first pay test")
+    void testFirstPaySuccess() {
+
+    }
+
+    @Test
+    @DisplayName("pay test: pay after subscribe end")
+    void testPaySuccess_afterSubscribeEnd() {
+
     }
 }

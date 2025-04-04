@@ -54,7 +54,6 @@ public class PaymentService {
                 .build());
 
         billing.issueKey(responseDto);
-        System.out.println(responseDto.getCardNumber());
 
         billingRepository.save(billing);
     }
@@ -148,6 +147,10 @@ public class PaymentService {
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
         Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible request::changePlanType::user=" + user.getEmail()));
+
+        if (billing.getEndedAt() == null) {
+            throw new RuntimeException("Impossible request::changePlanType::user=" + user.getEmail());
+        }
 
         billing.changePlanType(dto.getPlanType());
     }

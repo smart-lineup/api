@@ -1,5 +1,5 @@
 package com.jun.smartlineup.payment.domain;
 
 public enum BillingStatus {
-    ACTIVE, CANCEL
+    NONE, ACTIVE, CANCEL, EXPIRED
 }
