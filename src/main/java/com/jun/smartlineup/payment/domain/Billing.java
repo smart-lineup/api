@@ -78,7 +78,7 @@ public class Billing {
         this.customerKey = dto.getCustomerKey();
         this.cardLastNumber = dto.getCardNumber().substring(dto.getCardNumber().length() - 4);
         this.paymentProvider = PaymentMethod.TOSS;
-        this.status = BillingStatus.CANCEL;
+        this.status = BillingStatus.NONE;
     }
 
     public void subscribe() {
@@ -95,4 +95,5 @@ public class Billing {
         this.planType = planType;
         this.renewal = true;
     }
+
 }

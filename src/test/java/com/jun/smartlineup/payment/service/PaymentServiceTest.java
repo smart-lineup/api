@@ -1,6 +1,7 @@
 package com.jun.smartlineup.payment.service;
 
 import com.jun.smartlineup.payment.domain.Billing;
+import com.jun.smartlineup.payment.domain.BillingStatus;
 import com.jun.smartlineup.payment.domain.PlanType;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
@@ -87,12 +88,7 @@ public class PaymentServiceTest {
                 .customerKey("bb")
                 .build();
 
-        // 더미 응답 DTO 생성
-        BillingIssueKeyResponseDto responseDto = new BillingIssueKeyResponseDto();
-        responseDto.setBillingKey("dummy-billing-key");
-        responseDto.setCustomerKey("dummy-customer-key");
-        responseDto.setCardNumber("123456781234567*");
-
+        BillingIssueKeyResponseDto responseDto = getBillingIssueKeyResponseDto();
         ApiResult<BillingIssueKeyResponseDto> dummyApiResult = ApiResult.success(responseDto);
 
         webUtilMock.when(() -> WebUtil.postTossWithJson(
@@ -102,7 +98,7 @@ public class PaymentServiceTest {
         // Act
         paymentService.issueKey(userDetails, requestDto);
 
-        // Assert: Billing이 올바르게 업데이트되었는지 확인
+        // Assert
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
         assertTrue(optionalBilling.isPresent(), "Billing should be present after issuing key");
         Billing billing = optionalBilling.get();
@@ -116,9 +112,6 @@ public class PaymentServiceTest {
     void testPayInfoSuccess() {
         User user = createTestUser();
         CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
-
-        Billing billing = Billing.builder().user(user).build();
-        billingRepository.save(billing);
 
         PaymentInfoDto infoDto = new PaymentInfoDto();
         infoDto.setPrice(BigDecimal.valueOf(9_900));
@@ -198,16 +191,10 @@ public class PaymentServiceTest {
                 .customerKey("dummy-customer-key")
                 .price(BigDecimal.valueOf(9900))
                 .planType(PlanType.MONTHLY)
-                .startedAt(LocalDate.now())
-                .endedAt(LocalDate.now().plusDays(1))
                 .build();
         billingRepository.save(billing);
 
-        TossPaymentResponseDto tossResponse = new TossPaymentResponseDto();
-        tossResponse.setOrderId("order-12345");
-        tossResponse.setPaymentKey("dummy-payment-key");
-        tossResponse.setMId("dummy-mid");
-        tossResponse.setReceiptUrl("http://dummy.receipt.url");
+        TossPaymentResponseDto tossResponse = getTossPaymentResponseDto();
 
         ApiResult<TossPaymentResponseDto> dummyApiResult = ApiResult.success(tossResponse);
 
@@ -248,7 +235,7 @@ public class PaymentServiceTest {
                 .price(BigDecimal.valueOf(9900))
                 .planType(PlanType.MONTHLY)
                 .startedAt(LocalDate.now())
-                .endedAt(LocalDate.now().minusDays(1L))
+                .endedAt(LocalDate.now().plusDays(1L))
                 .build();
         billingRepository.save(billing);
 
@@ -274,7 +261,7 @@ public class PaymentServiceTest {
                 .price(BigDecimal.valueOf(9900))
                 .planType(PlanType.MONTHLY)
                 .startedAt(LocalDate.now())
-                .endedAt(LocalDate.now().plusDays(1))
+                .endedAt(LocalDate.now().minusDays(1))
                 .build();
         billingRepository.save(billing);
 
@@ -316,7 +303,7 @@ public class PaymentServiceTest {
                 .customerKey("dummy-customer-key")
                 .price(BigDecimal.valueOf(9900))
                 .planType(PlanType.MONTHLY)
-                .endedAt(LocalDate.now().plusDays(1))
+                .endedAt(LocalDate.now().minusDays(1))
                 .build();
         billingRepository.save(billing);
 
@@ -359,7 +346,8 @@ public class PaymentServiceTest {
                 .planType(PlanType.MONTHLY)
                 .startedAt(LocalDate.now())
                 .renewal(false)
-                .endedAt(LocalDate.now().plusMonths(1))
+                .status(BillingStatus.ACTIVE)
+                .endedAt(LocalDate.now().plusDays(1))
                 .build();
 
         billingRepository.save(billing);
@@ -379,8 +367,8 @@ public class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("plan-type test: if endAt don't exist when request")
-    void testPlanTypeFail_endAtDontExist() {
+    @DisplayName("plan-type test: if status isn't ACTIVE than throw Exception")
+    void testPlanTypeFail_statusIsNotACTIVE() {
         User user = createTestUser();
         CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
 
@@ -409,12 +397,172 @@ public class PaymentServiceTest {
     @Test
     @DisplayName("pay test: first pay test")
     void testFirstPaySuccess() {
+        User user = createTestUser();
+        CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
 
+        // 1. pay info
+        PaymentInfoDto infoDto = new PaymentInfoDto();
+        infoDto.setPrice(BigDecimal.valueOf(9_900));
+        infoDto.setPlanType(PlanType.MONTHLY);
+
+        paymentService.payInfo(userDetails, infoDto);
+
+        Optional<Billing> optionalBilling1 = billingRepository.getBillingByUser(user);
+        assertTrue(optionalBilling1.isPresent(), "Billing should be present");
+        Billing payInfoBilling = optionalBilling1.get();
+        assertNull(payInfoBilling.getBillingKey());
+        assertNull(payInfoBilling.getEndedAt());
+        assertNotNull(payInfoBilling.getPlanType());
+        assertFalse(payInfoBilling.getRenewal());
+        assertEquals(BillingStatus.NONE, payInfoBilling.getStatus());
+
+        // 2. issue key
+        BillingKeyRequestDto requestDto = BillingKeyRequestDto.builder()
+                .authKey("aa")
+                .customerKey("bb")
+                .build();
+
+        BillingIssueKeyResponseDto responseDto = getBillingIssueKeyResponseDto();
+        ApiResult<BillingIssueKeyResponseDto> dummyApiResult = ApiResult.success(responseDto);
+
+        webUtilMock.when(() -> WebUtil.postTossWithJson(
+                anyString(), anyString(), eq(requestDto), eq(BillingIssueKeyResponseDto.class)
+        )).thenReturn(dummyApiResult);
+
+        paymentService.issueKey(userDetails, requestDto);
+
+        Optional<Billing> optionalBilling2 = billingRepository.getBillingByUser(user);
+        assertTrue(optionalBilling2.isPresent(), "Billing should be present");
+        Billing IssueKeyBilling = optionalBilling2.get();
+        assertNotNull(IssueKeyBilling.getBillingKey());
+        assertNotNull(payInfoBilling.getCustomerKey());
+        assertNull(payInfoBilling.getEndedAt());
+        assertFalse(payInfoBilling.getRenewal());
+        assertEquals(BillingStatus.NONE, payInfoBilling.getStatus());
+
+        // 3. pay
+        TossPaymentResponseDto tossResponse = getTossPaymentResponseDto();
+        ApiResult<TossPaymentResponseDto> payApiResult = ApiResult.success(tossResponse);
+
+        webUtilMock.when(() -> WebUtil.postTossWithJson(
+                contains("https://api.tosspayments.com/v1/billing/"),
+                anyString(),
+                any(PaymentPayRequestDto.class),
+                eq(TossPaymentResponseDto.class)
+        )).thenReturn(payApiResult);
+
+        PayResponseDto response = paymentService.pay(userDetails);
+
+        assertTrue(response.getIsSuccess());
+        assertEquals("200", response.getCode());
+        assertEquals("ok", response.getMessage());
+
+        assertEquals(1, paymentTransactionRepository.count());
+
+        Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
+        assertTrue(optionalBilling.isPresent());
+        Billing updatedBilling = optionalBilling.get();
+        assertEquals(BillingStatus.ACTIVE, updatedBilling.getStatus());
+        assertTrue(updatedBilling.getRenewal());
     }
 
     @Test
-    @DisplayName("pay test: pay after subscribe end")
+    @DisplayName("pay test: pay after subscribe ended with adding new card")
     void testPaySuccess_afterSubscribeEnd() {
+        User user = createTestUser();
+        CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
 
+        Billing billing = Billing.builder()
+                .user(user)
+                .billingKey("before-billing-key")
+                .customerKey("before-customer-key")
+                .price(BigDecimal.valueOf(9900))
+                .planType(PlanType.MONTHLY)
+                .startedAt(LocalDate.now().minusMonths(1))
+                .endedAt(LocalDate.now().minusDays(1))
+                .cardLastNumber("111*")
+                .renewal(false)
+                .build();
+
+        billingRepository.save(billing);
+
+        // 1. pay info
+        PaymentInfoDto infoDto = new PaymentInfoDto();
+        infoDto.setPrice(BigDecimal.valueOf(57200));
+        infoDto.setPlanType(PlanType.ANNUAL);
+
+        paymentService.payInfo(userDetails, infoDto);
+
+        Optional<Billing> optionalBilling1 = billingRepository.getBillingByUser(user);
+        assertTrue(optionalBilling1.isPresent(), "Billing should be present");
+        Billing payInfoBilling = optionalBilling1.get();
+        assertEquals(PlanType.ANNUAL, payInfoBilling.getPlanType());
+        assertEquals(BillingStatus.NONE, payInfoBilling.getStatus());
+        assertFalse(payInfoBilling.getRenewal());
+
+        // 2. issue key
+        BillingKeyRequestDto requestDto = BillingKeyRequestDto.builder()
+                .authKey("aa")
+                .customerKey("bb")
+                .build();
+
+        BillingIssueKeyResponseDto responseDto = getBillingIssueKeyResponseDto();
+        ApiResult<BillingIssueKeyResponseDto> dummyApiResult = ApiResult.success(responseDto);
+
+        webUtilMock.when(() -> WebUtil.postTossWithJson(
+                anyString(), anyString(), eq(requestDto), eq(BillingIssueKeyResponseDto.class)
+        )).thenReturn(dummyApiResult);
+
+        paymentService.issueKey(userDetails, requestDto);
+
+        Optional<Billing> optionalBilling2 = billingRepository.getBillingByUser(user);
+        assertTrue(optionalBilling2.isPresent(), "Billing should be present");
+        Billing IssueKeyBilling = optionalBilling2.get();
+        assertEquals("dummy-billing-key", IssueKeyBilling.getBillingKey());
+        assertEquals("dummy-customer-key", payInfoBilling.getCustomerKey());
+        assertEquals(BillingStatus.NONE, payInfoBilling.getStatus());
+
+        // 3. pay
+        TossPaymentResponseDto tossResponse = getTossPaymentResponseDto();
+        ApiResult<TossPaymentResponseDto> payApiResult = ApiResult.success(tossResponse);
+
+        webUtilMock.when(() -> WebUtil.postTossWithJson(
+                contains("https://api.tosspayments.com/v1/billing/"),
+                anyString(),
+                any(PaymentPayRequestDto.class),
+                eq(TossPaymentResponseDto.class)
+        )).thenReturn(payApiResult);
+
+        PayResponseDto response = paymentService.pay(userDetails);
+
+        assertTrue(response.getIsSuccess());
+        assertEquals("200", response.getCode());
+        assertEquals("ok", response.getMessage());
+
+        assertEquals(1, paymentTransactionRepository.count());
+
+        Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
+        assertTrue(optionalBilling.isPresent());
+        Billing updatedBilling = optionalBilling.get();
+        assertEquals(BillingStatus.ACTIVE, updatedBilling.getStatus());
+        assertTrue(updatedBilling.getRenewal());
+    }
+
+    private BillingIssueKeyResponseDto getBillingIssueKeyResponseDto() {
+        BillingIssueKeyResponseDto responseDto = new BillingIssueKeyResponseDto();
+        responseDto.setBillingKey("dummy-billing-key");
+        responseDto.setCustomerKey("dummy-customer-key");
+        responseDto.setCardNumber("123456781234567*");
+        return responseDto;
+    }
+
+
+    private TossPaymentResponseDto getTossPaymentResponseDto() {
+        TossPaymentResponseDto tossResponse = new TossPaymentResponseDto();
+        tossResponse.setOrderId("order-12345");
+        tossResponse.setPaymentKey("dummy-payment-key");
+        tossResponse.setMId("dummy-mid");
+        tossResponse.setReceiptUrl("http://dummy.receipt.url");
+        return tossResponse;
     }
 }

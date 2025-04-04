@@ -1,6 +1,7 @@
 package com.jun.smartlineup.payment.service;
 
 import com.jun.smartlineup.payment.domain.Billing;
+import com.jun.smartlineup.payment.domain.BillingStatus;
 import com.jun.smartlineup.payment.domain.PaymentTransaction;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
@@ -87,7 +88,7 @@ public class PaymentService {
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
         Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible request::pay::user=" + user.getEmail()));
-        if (billing.getEndedAt() != null && billing.getEndedAt().isBefore(LocalDate.now())) {
+        if (billing.getEndedAt() != null && billing.getEndedAt().isAfter(LocalDate.now())) {
             throw new RuntimeException("Impossible to call api::pay::user=" + user.getEmail());
         }
 
@@ -148,7 +149,7 @@ public class PaymentService {
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
         Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible request::changePlanType::user=" + user.getEmail()));
 
-        if (billing.getEndedAt() == null) {
+        if (billing.getStatus() != BillingStatus.ACTIVE) {
             throw new RuntimeException("Impossible request::changePlanType::user=" + user.getEmail());
         }
 
