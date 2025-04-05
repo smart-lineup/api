@@ -1,11 +1,14 @@
 package com.jun.smartlineup.payment.service;
 
+import com.jun.smartlineup.exception.ImpossibleRequestException;
+import com.jun.smartlineup.exception.NotAvailableRefundException;
 import com.jun.smartlineup.payment.domain.Billing;
 import com.jun.smartlineup.payment.domain.BillingStatus;
 import com.jun.smartlineup.payment.domain.PaymentTransaction;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
 import com.jun.smartlineup.payment.repository.PaymentTransactionRepository;
+import com.jun.smartlineup.payment.util.PaymentUtil;
 import com.jun.smartlineup.payment.util.TossFailUtil;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
@@ -21,6 +24,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -60,7 +64,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public void payInfo(CustomUserDetails userDetails, PaymentInfoDto dto) {
+    public void payInfo(CustomUserDetails userDetails, PaymentInfoAddDto dto) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
@@ -70,16 +74,16 @@ public class PaymentService {
         billingRepository.save(billing);
     }
 
-    public PaymentExistDto existPayInfo(CustomUserDetails userDetails) {
+    public PaymentInfoResponseDto existPayInfo(CustomUserDetails userDetails) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
         Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible request::exist::user=" + user.getEmail()));
 
         if (billing.getEndedAt() != null) {
-            return PaymentExistDto.exist(billing);
+            return PaymentInfoResponseDto.exist(billing);
         }
-        return PaymentExistDto.notExist();
+        return PaymentInfoResponseDto.notExist();
     }
 
     @Transactional
@@ -154,5 +158,26 @@ public class PaymentService {
         }
 
         billing.changePlanType(dto.getPlanType());
+    }
+
+    public List<PaymentHistoryDto> history(CustomUserDetails userDetails) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+
+        return paymentTransactionRepository.findByUser(user).stream()
+                .map(PaymentHistoryDto::fromDto)
+                .toList();
+    }
+
+    @Transactional
+    public void refund(CustomUserDetails userDetails) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+        Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
+        Billing billing = optionalBilling.orElseThrow(() -> new ImpossibleRequestException("refund", user));
+
+        if (!PaymentUtil.isRefundable(billing.getStartedAt())) {
+            throw new NotAvailableRefundException();
+        }
+
+        paymentTransactionRepository.findByUser(user);
     }
 }

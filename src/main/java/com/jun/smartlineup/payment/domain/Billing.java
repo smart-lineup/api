@@ -1,7 +1,7 @@
 package com.jun.smartlineup.payment.domain;
 
 import com.jun.smartlineup.payment.dto.BillingIssueKeyResponseDto;
-import com.jun.smartlineup.payment.dto.PaymentInfoDto;
+import com.jun.smartlineup.payment.dto.PaymentInfoAddDto;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -68,7 +68,7 @@ public class Billing {
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public void changeInfo(PaymentInfoDto dto) {
+    public void changeInfo(PaymentInfoAddDto dto) {
         this.price = dto.getPrice();
         this.planType = dto.getPlanType();
     }

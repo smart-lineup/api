@@ -7,7 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class PaymentInfoDto {
+public class PaymentInfoAddDto {
     @NotNull
     private BigDecimal price;
     @NotNull

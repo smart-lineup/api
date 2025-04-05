@@ -1,5 +1,6 @@
 package com.jun.smartlineup.user.domain;
 
+import com.jun.smartlineup.user.dto.UpdateProfileRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -87,5 +88,9 @@ public class User {
 
     public void changePassword(String newPassword) {
         this.password = newPassword;
+    }
+
+    public void updateProfile(UpdateProfileRequestDto dto) {
+        this.name = dto.getName();
     }
 }

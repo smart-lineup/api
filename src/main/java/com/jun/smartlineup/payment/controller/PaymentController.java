@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/payment")
@@ -25,14 +27,14 @@ public class PaymentController {
     }
 
     @PostMapping("/info")
-    public ResponseEntity<String> info(@Valid @RequestBody PaymentInfoDto dto) {
+    public ResponseEntity<String> info(@Valid @RequestBody PaymentInfoAddDto dto) {
         CustomUserDetails userDetails = UserUtil.getUserDetails();
         paymentService.payInfo(userDetails, dto);
         return ResponseEntity.ok("ok");
     }
 
     @GetMapping("/info")
-    public ResponseEntity<PaymentExistDto> payInfo() {
+    public ResponseEntity<PaymentInfoResponseDto> payInfo() {
         CustomUserDetails userDetails = UserUtil.getUserDetails();
         return ResponseEntity.ok(paymentService.existPayInfo(userDetails));
     }
@@ -47,6 +49,17 @@ public class PaymentController {
     @PutMapping("/plan-type")
     public ResponseEntity<String> changePlanType(@Valid @RequestBody BillingPlanTypeRequestDto dto) {
         paymentService.changePlanType(UserUtil.getUserDetails(), dto);
+
+        return ResponseEntity.ok("ok");
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<PaymentHistoryDto>> history() {
+        return ResponseEntity.ok(paymentService.history(UserUtil.getUserDetails()));
+    }
+
+    @PostMapping("/refund")
+    public ResponseEntity<String> refund() {
 
         return ResponseEntity.ok("ok");
     }

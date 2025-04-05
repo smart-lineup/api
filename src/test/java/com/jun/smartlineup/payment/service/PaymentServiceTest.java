@@ -113,7 +113,7 @@ public class PaymentServiceTest {
         User user = createTestUser();
         CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
 
-        PaymentInfoDto infoDto = new PaymentInfoDto();
+        PaymentInfoAddDto infoDto = new PaymentInfoAddDto();
         infoDto.setPrice(BigDecimal.valueOf(9_900));
         infoDto.setPlanType(PlanType.MONTHLY);
 
@@ -147,7 +147,7 @@ public class PaymentServiceTest {
         billingRepository.save(billing);
 
         // Act
-        PaymentExistDto existDto = paymentService.existPayInfo(userDetails);
+        PaymentInfoResponseDto existDto = paymentService.existPayInfo(userDetails);
 
         // Assert
         assertTrue(existDto.getIsExist());
@@ -168,7 +168,7 @@ public class PaymentServiceTest {
         billingRepository.save(billing);
 
         // Act
-        PaymentExistDto existDto = paymentService.existPayInfo(userDetails);
+        PaymentInfoResponseDto existDto = paymentService.existPayInfo(userDetails);
 
         // Assert
         assertFalse(existDto.getIsExist());
@@ -375,10 +375,10 @@ public class PaymentServiceTest {
         Billing billing = Billing.builder()
                 .user(user)
                 .build();
-        PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
-        paymentInfoDto.setPlanType(PlanType.MONTHLY);
-        paymentInfoDto.setPrice(BigDecimal.valueOf(9900));
-        billing.changeInfo(paymentInfoDto);
+        PaymentInfoAddDto paymentInfoAddDto = new PaymentInfoAddDto();
+        paymentInfoAddDto.setPlanType(PlanType.MONTHLY);
+        paymentInfoAddDto.setPrice(BigDecimal.valueOf(9900));
+        billing.changeInfo(paymentInfoAddDto);
 
         billingRepository.save(billing);
 
@@ -401,7 +401,7 @@ public class PaymentServiceTest {
         CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
 
         // 1. pay info
-        PaymentInfoDto infoDto = new PaymentInfoDto();
+        PaymentInfoAddDto infoDto = new PaymentInfoAddDto();
         infoDto.setPrice(BigDecimal.valueOf(9_900));
         infoDto.setPlanType(PlanType.MONTHLY);
 
@@ -487,7 +487,7 @@ public class PaymentServiceTest {
         billingRepository.save(billing);
 
         // 1. pay info
-        PaymentInfoDto infoDto = new PaymentInfoDto();
+        PaymentInfoAddDto infoDto = new PaymentInfoAddDto();
         infoDto.setPrice(BigDecimal.valueOf(57200));
         infoDto.setPlanType(PlanType.ANNUAL);
 

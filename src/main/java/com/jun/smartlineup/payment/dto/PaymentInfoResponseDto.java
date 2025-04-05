@@ -2,8 +2,8 @@ package com.jun.smartlineup.payment.dto;
 
 import com.jun.smartlineup.payment.domain.Billing;
 import com.jun.smartlineup.payment.domain.BillingStatus;
-import com.jun.smartlineup.payment.domain.PayStatus;
 import com.jun.smartlineup.payment.domain.PlanType;
+import com.jun.smartlineup.payment.util.PaymentUtil;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,27 +11,31 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class PaymentExistDto {
+public class PaymentInfoResponseDto {
     private Boolean isExist;
+    private Boolean isSubscribe;
     private String cardLastNumber;
     private LocalDate endAt;
-    private Boolean isSubscribe;
     private PlanType planType;
     private BillingStatus status;
+    private LocalDate nextPaymentDate;
+    private Boolean isRefundable;
 
-    public static PaymentExistDto exist(Billing billing) {
-        return PaymentExistDto.builder()
+    public static PaymentInfoResponseDto exist(Billing billing) {
+        return PaymentInfoResponseDto.builder()
                 .isExist(true)
                 .cardLastNumber(billing.getCardLastNumber())
                 .endAt(billing.getEndedAt())
                 .isSubscribe(billing.getEndedAt().isAfter(LocalDate.now()))
                 .planType(billing.getPlanType())
                 .status(billing.getStatus())
+                .nextPaymentDate(billing.getEndedAt().plusDays(1))
+                .isRefundable(PaymentUtil.isRefundable(billing.getStartedAt()))
                 .build();
     }
 
-    public static PaymentExistDto notExist() {
-        return PaymentExistDto.builder()
+    public static PaymentInfoResponseDto notExist() {
+        return PaymentInfoResponseDto.builder()
                 .isExist(false)
                 .build();
     }

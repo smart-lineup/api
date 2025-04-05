@@ -140,4 +140,10 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
         User user = UserUtil.ConvertUser(userRepository, userDetails);
         return new UserUuidResponseDto(user.getUuid());
     }
+
+    public ResponseCookie updateProfile(CustomUserDetails userDetails, UpdateProfileRequestDto dto) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+        user.updateProfile(dto);
+        return jwtTokenProvider.getJwtCookie(user);
+    }
 }

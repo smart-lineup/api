@@ -2,20 +2,20 @@ package com.jun.smartlineup.user.controller;
 
 import com.jun.smartlineup.config.auth.JwtTokenProvider;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
+import com.jun.smartlineup.user.dto.UpdateProfileRequestDto;
 import com.jun.smartlineup.user.dto.UserUuidResponseDto;
 import com.jun.smartlineup.user.service.UserService;
+import com.jun.smartlineup.user.utils.UserUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,12 +34,19 @@ public class UserController {
         return ResponseEntity.ok("logout success");
     }
 
-
     @GetMapping("/uuid")
     public ResponseEntity<UserUuidResponseDto> uuid() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
         return ResponseEntity.ok(userService.uuid(user));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<String> updateProfile(@Valid @RequestBody UpdateProfileRequestDto dto,
+                                                HttpServletResponse response) {
+        ResponseCookie jwtCookie = userService.updateProfile(UserUtil.getUserDetails(), dto);
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
+        return ResponseEntity.ok("ok");
     }
 }
