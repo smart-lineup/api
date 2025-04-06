@@ -5,6 +5,7 @@ import com.jun.smartlineup.payment.domain.BillingStatus;
 import com.jun.smartlineup.payment.domain.PlanType;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
+import com.jun.smartlineup.payment.repository.PaymentCancelRepository;
 import com.jun.smartlineup.payment.repository.PaymentTransactionRepository;
 import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
@@ -40,13 +41,15 @@ public class PaymentServiceTest {
 
     @Autowired
     private PaymentTransactionRepository paymentTransactionRepository;
+    @Autowired
+    private PaymentCancelRepository paymentCancelRepository;
 
     private PaymentService paymentService;
     private MockedStatic<WebUtil> webUtilMock;
 
     @BeforeEach
     void setUp() {
-        paymentService = new PaymentService(billingRepository, userRepository, paymentTransactionRepository);
+        paymentService = new PaymentService(billingRepository, userRepository, paymentTransactionRepository, paymentCancelRepository);
 
         billingRepository.deleteAll();
         paymentTransactionRepository.deleteAll();
@@ -66,7 +69,7 @@ public class PaymentServiceTest {
                 .name("Test User")
                 .email("test@test.com")
                 .uuid("dummy-uuid")
-                .role(Role.USER)
+                .role(Role.FREE)
                 .build();
         return userRepository.save(user);
     }
