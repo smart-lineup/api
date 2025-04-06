@@ -265,15 +265,15 @@ public class PaymentServiceTest {
                 .build();
         billingRepository.save(billing);
 
-        TossFailDto.ErrorDetail errorDetail = TossFailDto.ErrorDetail.builder()
+        TossErrorResponse.ErrorDetail errorDetail = TossErrorResponse.ErrorDetail.builder()
                 .code("INVALID_REJECT_CARD")
                 .message("카드 사용이 거절되었습니다. 카드사 문의가 필요합니다.")
                 .build();
-        TossFailDto tossFailDto = TossFailDto.builder()
+        TossErrorResponse tossErrorResponse = TossErrorResponse.builder()
                 .error(errorDetail)
                 .build();
 
-        ApiResult<TossPaymentResponseDto> dummyApiResult = ApiResult.failure(tossFailDto);
+        ApiResult<TossPaymentResponseDto> dummyApiResult = ApiResult.failure(tossErrorResponse);
 
         webUtilMock.when(() -> WebUtil.postTossWithJson(
                 contains("https://api.tosspayments.com/v1/billing/"),
@@ -307,15 +307,15 @@ public class PaymentServiceTest {
                 .build();
         billingRepository.save(billing);
 
-        TossFailDto.ErrorDetail errorDetail = TossFailDto.ErrorDetail.builder()
+        TossErrorResponse.ErrorDetail errorDetail = TossErrorResponse.ErrorDetail.builder()
                 .code("JUST_ERROR_CODE")
                 .message("JUST_ERROR_CODE")
                 .build();
-        TossFailDto tossFailDto = TossFailDto.builder()
+        TossErrorResponse tossErrorResponse = TossErrorResponse.builder()
                 .error(errorDetail)
                 .build();
 
-        ApiResult<TossPaymentResponseDto> dummyApiResult = ApiResult.failure(tossFailDto);
+        ApiResult<TossPaymentResponseDto> dummyApiResult = ApiResult.failure(tossErrorResponse);
 
         webUtilMock.when(() -> WebUtil.postTossWithJson(
                 contains("https://api.tosspayments.com/v1/billing/"),

@@ -76,10 +76,8 @@ public class User {
         return this;
     }
 
-    public User updateRole(Role role) {
+    public void updateRole(Role role) {
         this.role = role;
-
-        return this;
     }
 
     public void SuccessVerified() {

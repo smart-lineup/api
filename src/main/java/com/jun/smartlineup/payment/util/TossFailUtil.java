@@ -1,5 +1,10 @@
 package com.jun.smartlineup.payment.util;
 
+import com.jun.smartlineup.payment.dto.ApiResult;
+import com.jun.smartlineup.payment.dto.PayResponseDto;
+import com.jun.smartlineup.payment.dto.TossErrorResponse;
+import com.jun.smartlineup.payment.dto.TossPaymentResponseDto;
+
 import java.util.*;
 
 public class TossFailUtil {
@@ -30,5 +35,22 @@ public class TossFailUtil {
         failMap.put("EXCEED_MAX_AUTH_COUNT", "최대 인증 횟수를 초과했습니다. 카드사로 문의해주세요.");
         failMap.put("EXCEED_MAX_ONE_DAY_AMOUNT", "일일 한도를 초과했습니다.");
         return failMap;
+    }
+
+    public static PayResponseDto getPayResponseDtoForFail(ApiResult<TossPaymentResponseDto> apiResult) {
+        TossErrorResponse error = apiResult.getError();
+        if (TossFailUtil.isFailBaseOnUser(error.getCode())) {
+            return PayResponseDto.builder()
+                    .isSuccess(false)
+                    .code("400")
+                    .message(TossFailUtil.getMessageBasedOnCode(error.getCode()))
+                    .build();
+        }
+
+        return PayResponseDto.builder()
+                .isSuccess(false)
+                .code("500")
+                .message("예기치 못한 에러가 발생하였습니다. 문의 부탁드립니다.")
+                .build();
     }
 }

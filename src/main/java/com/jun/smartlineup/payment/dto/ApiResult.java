@@ -5,9 +5,9 @@ import lombok.ToString;
 @ToString
 public class ApiResult<T> {
     private final T data;
-    private final TossFailDto error;
+    private final TossErrorResponse error;
 
-    private ApiResult(T data, TossFailDto error) {
+    private ApiResult(T data, TossErrorResponse error) {
         this.data = data;
         this.error = error;
     }
@@ -16,7 +16,7 @@ public class ApiResult<T> {
         return new ApiResult<>(data, null);
     }
 
-    public static <T> ApiResult<T> failure(TossFailDto error) {
+    public static <T> ApiResult<T> failure(TossErrorResponse error) {
         return new ApiResult<>(null, error);
     }
 
@@ -32,7 +32,7 @@ public class ApiResult<T> {
         return data;
     }
 
-    public TossFailDto getError() {
+    public TossErrorResponse getError() {
         return error;
     }
 }

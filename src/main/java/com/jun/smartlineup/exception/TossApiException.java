@@ -1,16 +1,16 @@
 package com.jun.smartlineup.exception;
 
-import com.jun.smartlineup.payment.dto.TossFailDto;
+import com.jun.smartlineup.payment.dto.TossErrorResponse;
 
 public class TossApiException extends RuntimeException {
-    private final TossFailDto error;
+    private final TossErrorResponse error;
 
-    public TossApiException(TossFailDto error) {
-        super("Toss API Error: " + error.getError().getCode());
+    public TossApiException(TossErrorResponse error) {
+        super("Toss API Error: " + error.getCode() + "::" + error.getMessage());
         this.error = error;
     }
 
-    public TossFailDto getError() {
+    public TossErrorResponse getError() {
         return error;
     }
 }

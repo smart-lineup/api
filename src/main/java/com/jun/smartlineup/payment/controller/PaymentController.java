@@ -60,7 +60,13 @@ public class PaymentController {
 
     @PostMapping("/refund")
     public ResponseEntity<String> refund() {
+        paymentService.refund(UserUtil.getUserDetails());
+        return ResponseEntity.ok("ok");
+    }
 
+    @PutMapping("/cancel")
+    public ResponseEntity<String> cancel() {
+        paymentService.cancel(UserUtil.getUserDetails());
         return ResponseEntity.ok("ok");
     }
 }

@@ -25,7 +25,7 @@ public class PaymentTransaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "purchase_id")
+    @Column(name = "payment_transaction_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -43,7 +43,6 @@ public class PaymentTransaction {
     @Column(nullable = false)
     private PaymentMethod paymentMethod;
 
-    // for fail
     private String transactionId;
 
     private String orderId;
@@ -57,12 +56,6 @@ public class PaymentTransaction {
     @Enumerated(EnumType.STRING)
     private PayStatus status;
 
-    private LocalDateTime cancelAt;
-
-    private String cancelReason;
-
-    private BigDecimal cancelAmount;
-
     @Builder.Default
     @CreatedDate
     @Column(updatable = false)
@@ -72,7 +65,7 @@ public class PaymentTransaction {
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public static PaymentTransaction successWithToss(User user, Billing billing, TossPaymentResponseDto dto) {
+    public static PaymentTransaction payWithToss(User user, Billing billing, TossPaymentResponseDto dto) {
         return PaymentTransaction.builder()
                 .user(user)
                 .billing(billing)

@@ -9,8 +9,8 @@ import java.util.List;
 @Getter
 @RequiredArgsConstructor
 public enum Role {
-    USER("ROLE_USER", "Basic user"),
-    VIP("ROLE_VIP", "Pay user");
+    FREE("FREE", "Basic user"),
+    PREMIUM("PREMIUM", "Pay user");
 
     private final String key;
     private final String title;

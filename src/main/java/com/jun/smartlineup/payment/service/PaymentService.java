@@ -2,14 +2,18 @@ package com.jun.smartlineup.payment.service;
 
 import com.jun.smartlineup.exception.ImpossibleRequestException;
 import com.jun.smartlineup.exception.NotAvailableRefundException;
+import com.jun.smartlineup.exception.TossApiException;
 import com.jun.smartlineup.payment.domain.Billing;
 import com.jun.smartlineup.payment.domain.BillingStatus;
+import com.jun.smartlineup.payment.domain.PaymentCancel;
 import com.jun.smartlineup.payment.domain.PaymentTransaction;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.repository.BillingRepository;
+import com.jun.smartlineup.payment.repository.PaymentCancelRepository;
 import com.jun.smartlineup.payment.repository.PaymentTransactionRepository;
 import com.jun.smartlineup.payment.util.PaymentUtil;
 import com.jun.smartlineup.payment.util.TossFailUtil;
+import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
@@ -33,6 +37,7 @@ public class PaymentService {
     private final BillingRepository billingRepository;
     private final UserRepository userRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private final PaymentCancelRepository paymentCancelRepository;
 
     @Value("${payment.toss.secret-key}")
     private String tossSecretKey;
@@ -49,7 +54,7 @@ public class PaymentService {
                 BillingIssueKeyResponseDto.class);
 
         if (apiResult.isFail()) {
-
+            throw new TossApiException(apiResult.getError());
         }
         BillingIssueKeyResponseDto responseDto = apiResult.getData();
 
@@ -93,7 +98,7 @@ public class PaymentService {
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
         Billing billing = optionalBilling.orElseThrow(() -> new RuntimeException("Impossible request::pay::user=" + user.getEmail()));
         if (billing.getEndedAt() != null && billing.getEndedAt().isAfter(LocalDate.now())) {
-            throw new RuntimeException("Impossible to call api::pay::user=" + user.getEmail());
+            throw new ImpossibleRequestException("pay", user);
         }
 
         String url = "https://api.tosspayments.com/v1/billing/" + billing.getBillingKey();
@@ -115,36 +120,23 @@ public class PaymentService {
                 TossPaymentResponseDto.class);
 
         if (apiResult.isFail()) {
-            TossFailDto error = apiResult.getError();
-            System.out.println(apiResult);
-            TossFailDto.ErrorDetail detail = error.getError();
-            // add logging
-            if (TossFailUtil.isFailBaseOnUser(detail.getCode())) {
-                return PayResponseDto.builder()
-                        .isSuccess(false)
-                        .code("400")
-                        .message(TossFailUtil.getMessageBasedOnCode(detail.getCode()))
-                        .build();
-            }
-
-            return PayResponseDto.builder()
-                    .isSuccess(false)
-                    .code("500")
-                    .message("예기치 못한 에러가 발생하였습니다. 문의 부탁드립니다.")
-                    .build();
+            return TossFailUtil.getPayResponseDtoForFail(apiResult);
         }
         TossPaymentResponseDto responseDto = apiResult.getData();
 
-        PaymentTransaction paymentTransaction = PaymentTransaction.successWithToss(user, billing, responseDto);
+        PaymentTransaction paymentTransaction = PaymentTransaction.payWithToss(user, billing, responseDto);
         paymentTransactionRepository.save(paymentTransaction);
 
         billing.subscribe();
+        user.updateRole(Role.PREMIUM);
+
         return PayResponseDto.builder()
                 .isSuccess(true)
                 .code("200")
                 .message("ok")
                 .build();
     }
+
 
     @Transactional
     public void changePlanType(CustomUserDetails userDetails, BillingPlanTypeRequestDto dto) {
@@ -163,7 +155,7 @@ public class PaymentService {
     public List<PaymentHistoryDto> history(CustomUserDetails userDetails) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
-        return paymentTransactionRepository.findByUser(user).stream()
+        return paymentTransactionRepository.findByUserWithCancel(user).stream()
                 .map(PaymentHistoryDto::fromDto)
                 .toList();
     }
@@ -174,10 +166,45 @@ public class PaymentService {
         Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
         Billing billing = optionalBilling.orElseThrow(() -> new ImpossibleRequestException("refund", user));
 
-        if (!PaymentUtil.isRefundable(billing.getStartedAt())) {
+        if (!PaymentUtil.isRefundable(billing)) {
             throw new NotAvailableRefundException();
         }
 
-        paymentTransactionRepository.findByUser(user);
+        Optional<PaymentTransaction> optionalPaymentTransaction = paymentTransactionRepository.findFirstByUserOrderByCreatedAtDesc(user);
+        PaymentTransaction transaction = optionalPaymentTransaction.orElseThrow(() -> new ImpossibleRequestException("refund", user));
+        String paymentKey = transaction.getPaymentKey();
+
+        String url = "https://api.tosspayments.com/v1/payments/" + paymentKey + "/cancel";
+        String secretKey = Base64.getEncoder().encodeToString((tossSecretKey + ":").getBytes());
+        RefundApiRequestDto apiRequestDto = RefundApiRequestDto.builder()
+                .cancelReason("단순 변심")
+                .build();
+
+        ApiResult<TossPaymentResponseDto> apiResult = WebUtil.postTossWithJson(
+                url,
+                secretKey,
+                apiRequestDto,
+                TossPaymentResponseDto.class);
+
+        if (apiResult.isFail()) {
+            TossErrorResponse error = apiResult.getError();
+            throw new TossApiException(error);
+        }
+
+        TossPaymentResponseDto responseDto = apiResult.getData();
+        List<PaymentCancel> paymentCancels = PaymentCancel.cancelWithToss(user, transaction, responseDto, "user");
+        paymentCancelRepository.saveAll(paymentCancels);
+
+        billing.refund();
+        user.updateRole(Role.FREE);
+    }
+
+    @Transactional
+    public void cancel(CustomUserDetails userDetails) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
+        Optional<Billing> optionalBilling = billingRepository.getBillingByUser(user);
+        Billing billing = optionalBilling.orElseThrow(() -> new ImpossibleRequestException("refund", user));
+
+        billing.cancel();
     }
 }

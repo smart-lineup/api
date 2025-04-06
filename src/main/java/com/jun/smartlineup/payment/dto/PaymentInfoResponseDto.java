@@ -29,9 +29,16 @@ public class PaymentInfoResponseDto {
                 .isSubscribe(billing.getEndedAt().isAfter(LocalDate.now()))
                 .planType(billing.getPlanType())
                 .status(billing.getStatus())
-                .nextPaymentDate(billing.getEndedAt().plusDays(1))
-                .isRefundable(PaymentUtil.isRefundable(billing.getStartedAt()))
+                .nextPaymentDate(getNextPaymentDate(billing))
+                .isRefundable(PaymentUtil.isRefundable(billing))
                 .build();
+    }
+
+    private static LocalDate getNextPaymentDate(Billing billing) {
+        if (!billing.getRenewal()) {
+            return null;
+        }
+        return billing.getEndedAt().plusDays(1);
     }
 
     public static PaymentInfoResponseDto notExist() {

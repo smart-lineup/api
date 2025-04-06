@@ -2,7 +2,7 @@ package com.jun.smartlineup.utils;
 
 import com.jun.smartlineup.exception.TossApiException;
 import com.jun.smartlineup.payment.dto.ApiResult;
-import com.jun.smartlineup.payment.dto.TossFailDto;
+import com.jun.smartlineup.payment.dto.TossErrorResponse;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -19,7 +19,7 @@ public class WebUtil {
                     .bodyValue(requestBody)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, response ->
-                            response.bodyToMono(TossFailDto.class)
+                            response.bodyToMono(TossErrorResponse.class)
                                     .flatMap(err -> Mono.error(new TossApiException(err)))
                     )
                     .bodyToMono(responseType)

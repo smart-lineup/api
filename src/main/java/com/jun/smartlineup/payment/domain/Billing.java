@@ -5,6 +5,7 @@ import com.jun.smartlineup.payment.dto.PaymentInfoAddDto;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -30,9 +31,9 @@ public class Billing {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String billingKey;  // Toss에서 받은 billingKey
+    private String billingKey;
 
-    private String customerKey;  // Toss에서 받은 customerKey
+    private String customerKey;
 
     @Setter
     @Builder.Default
@@ -96,4 +97,13 @@ public class Billing {
         this.renewal = true;
     }
 
+    public void refund() {
+        status = BillingStatus.CANCEL;
+        renewal = false;
+        endedAt = LocalDate.now().minusDays(1);
+    }
+
+    public void cancel() {
+        renewal = false;
+    }
 }

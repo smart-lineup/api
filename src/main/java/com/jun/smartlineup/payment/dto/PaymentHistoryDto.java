@@ -1,5 +1,6 @@
 package com.jun.smartlineup.payment.dto;
 
+import com.jun.smartlineup.payment.dao.PaymentHistoryRow;
 import com.jun.smartlineup.payment.domain.PayStatus;
 import com.jun.smartlineup.payment.domain.PaymentTransaction;
 import lombok.Builder;
@@ -16,12 +17,12 @@ public class PaymentHistoryDto {
     private String method;
     private LocalDateTime createdAt;
 
-    public static PaymentHistoryDto fromDto(PaymentTransaction pt) {
+    public static PaymentHistoryDto fromDto(PaymentHistoryRow pt) {
         return PaymentHistoryDto.builder()
-                .amount(pt.getAmount())
-                .status(pt.getStatus())
+                .amount(pt.amount())
+                .status(pt.status())
                 .method("CARD")
-                .createdAt(pt.getCreatedAt())
+                .createdAt(pt.createdAt())
                 .build();
     }
 }
