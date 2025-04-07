@@ -46,6 +46,11 @@ public class PaymentController {
         return ResponseEntity.ok(payDto);
     }
 
+    @GetMapping("/plan-type")
+    public ResponseEntity<PlanTypeDto> planTypeInfo() {
+        return ResponseEntity.ok(PlanTypeDto.create());
+    }
+
     @PutMapping("/plan-type")
     public ResponseEntity<String> changePlanType(@Valid @RequestBody BillingPlanTypeRequestDto dto) {
         paymentService.changePlanType(UserUtil.getUserDetails(), dto);

@@ -1,4 +1,4 @@
-package com.jun.smartlineup.exception;
+package com.jun.smartlineup.common.exception;
 
 public class NotAvailableRefundException extends RuntimeException {
     public NotAvailableRefundException() {

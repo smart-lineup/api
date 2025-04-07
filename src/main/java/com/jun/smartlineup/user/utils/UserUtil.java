@@ -1,6 +1,6 @@
 package com.jun.smartlineup.user.utils;
 
-import com.jun.smartlineup.exception.NoExistUserException;
+import com.jun.smartlineup.common.exception.NoExistUserException;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;

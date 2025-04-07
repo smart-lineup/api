@@ -1,6 +1,6 @@
 package com.jun.smartlineup.line.service;
 
-import com.jun.smartlineup.exception.NoExistUserException;
+import com.jun.smartlineup.common.exception.NoExistUserException;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.line.dto.LineChangeNameRequestDto;
 import com.jun.smartlineup.line.dto.LineResponseDto;

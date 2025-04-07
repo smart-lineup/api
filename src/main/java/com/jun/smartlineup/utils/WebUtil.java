@@ -1,6 +1,6 @@
 package com.jun.smartlineup.utils;
 
-import com.jun.smartlineup.exception.TossApiException;
+import com.jun.smartlineup.common.exception.TossApiException;
 import com.jun.smartlineup.payment.dto.ApiResult;
 import com.jun.smartlineup.payment.dto.TossErrorResponse;
 import org.springframework.http.HttpStatusCode;

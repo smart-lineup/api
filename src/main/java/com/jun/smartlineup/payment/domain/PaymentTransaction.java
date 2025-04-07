@@ -65,9 +65,9 @@ public class PaymentTransaction {
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public static PaymentTransaction payWithToss(User user, Billing billing, TossPaymentResponseDto dto) {
+    public static PaymentTransaction payWithToss(Billing billing, TossPaymentResponseDto dto) {
         return PaymentTransaction.builder()
-                .user(user)
+                .user(billing.getUser())
                 .billing(billing)
                 .amount(billing.getPrice())
                 .paymentMethod(PaymentMethod.TOSS)

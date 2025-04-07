@@ -1,8 +1,8 @@
 package com.jun.smartlineup.payment.service;
 
-import com.jun.smartlineup.exception.ImpossibleRequestException;
-import com.jun.smartlineup.exception.NotAvailableRefundException;
-import com.jun.smartlineup.exception.TossApiException;
+import com.jun.smartlineup.common.exception.ImpossibleRequestException;
+import com.jun.smartlineup.common.exception.NotAvailableRefundException;
+import com.jun.smartlineup.common.exception.TossApiException;
 import com.jun.smartlineup.payment.domain.Billing;
 import com.jun.smartlineup.payment.domain.BillingStatus;
 import com.jun.smartlineup.payment.domain.PaymentCancel;
@@ -18,16 +18,12 @@ import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
 import com.jun.smartlineup.user.utils.UserUtil;
-import com.jun.smartlineup.utils.WebUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,12 +42,7 @@ public class PaymentService {
     public void issueKey(CustomUserDetails userDetails, BillingKeyRequestDto dto) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
 
-        String tossUrl = "https://api.tosspayments.com/v1/billing/authorizations/issue";
-        String secretKey = Base64.getEncoder().encodeToString((tossSecretKey + ":").getBytes(StandardCharsets.UTF_8));
-        ApiResult<BillingIssueKeyResponseDto> apiResult = WebUtil.postTossWithJson(tossUrl,
-                secretKey,
-                dto,
-                BillingIssueKeyResponseDto.class);
+        ApiResult<BillingIssueKeyResponseDto> apiResult = PaymentUtil.issueKeyToToss(dto, tossSecretKey);
 
         if (apiResult.isFail()) {
             throw new TossApiException(apiResult.getError());
@@ -101,30 +92,14 @@ public class PaymentService {
             throw new ImpossibleRequestException("pay", user);
         }
 
-        String url = "https://api.tosspayments.com/v1/billing/" + billing.getBillingKey();
-        String secretKey = Base64.getEncoder().encodeToString((tossSecretKey + ":").getBytes());
-
-        PaymentPayRequestDto dto = PaymentPayRequestDto.builder()
-                .customerKey(billing.getCustomerKey())
-                .amount(billing.getPrice())
-                .orderId("order-" + user.getId() + "-" + System.currentTimeMillis())
-                .orderName("Smart Line up " + billing.getPlanType().getKorean() + " 구독")
-                .customerEmail(user.getEmail())
-                .customerName(user.getName())
-                .taxFreeAmount(BigDecimal.valueOf(0))
-                .build();
-
-        ApiResult<TossPaymentResponseDto> apiResult = WebUtil.postTossWithJson(url,
-                secretKey,
-                dto,
-                TossPaymentResponseDto.class);
+        ApiResult<TossPaymentResponseDto> apiResult = PaymentUtil.payToToss(billing, user, tossSecretKey);
 
         if (apiResult.isFail()) {
             return TossFailUtil.getPayResponseDtoForFail(apiResult);
         }
         TossPaymentResponseDto responseDto = apiResult.getData();
 
-        PaymentTransaction paymentTransaction = PaymentTransaction.payWithToss(user, billing, responseDto);
+        PaymentTransaction paymentTransaction = PaymentTransaction.payWithToss(billing, responseDto);
         paymentTransactionRepository.save(paymentTransaction);
 
         billing.subscribe();
@@ -174,17 +149,7 @@ public class PaymentService {
         PaymentTransaction transaction = optionalPaymentTransaction.orElseThrow(() -> new ImpossibleRequestException("refund", user));
         String paymentKey = transaction.getPaymentKey();
 
-        String url = "https://api.tosspayments.com/v1/payments/" + paymentKey + "/cancel";
-        String secretKey = Base64.getEncoder().encodeToString((tossSecretKey + ":").getBytes());
-        RefundApiRequestDto apiRequestDto = RefundApiRequestDto.builder()
-                .cancelReason("단순 변심")
-                .build();
-
-        ApiResult<TossPaymentResponseDto> apiResult = WebUtil.postTossWithJson(
-                url,
-                secretKey,
-                apiRequestDto,
-                TossPaymentResponseDto.class);
+        ApiResult<TossPaymentResponseDto> apiResult = PaymentUtil.refundToToss(paymentKey, tossSecretKey);
 
         if (apiResult.isFail()) {
             TossErrorResponse error = apiResult.getError();

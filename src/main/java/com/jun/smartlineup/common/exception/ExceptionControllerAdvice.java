@@ -1,7 +1,6 @@
-package com.jun.smartlineup.exception;
+package com.jun.smartlineup.common.exception;
 
 import jakarta.mail.MessagingException;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

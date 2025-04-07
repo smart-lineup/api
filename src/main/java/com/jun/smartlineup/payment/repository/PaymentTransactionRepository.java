@@ -1,12 +1,14 @@
 package com.jun.smartlineup.payment.repository;
 
 import com.jun.smartlineup.payment.dao.PaymentHistoryRow;
+import com.jun.smartlineup.payment.domain.Billing;
 import com.jun.smartlineup.payment.domain.PaymentTransaction;
 import com.jun.smartlineup.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,4 +30,6 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     List<PaymentHistoryRow> findByUserWithCancel(User user);
 
     Optional<PaymentTransaction> findFirstByUserOrderByCreatedAtDesc(User user);
+
+    boolean existsByBillingAndCreatedAtBetween(Billing billing, LocalDateTime start, LocalDateTime end);
 }

@@ -1,4 +1,4 @@
-package com.jun.smartlineup.exception;
+package com.jun.smartlineup.common.exception;
 
 import com.jun.smartlineup.payment.dto.TossErrorResponse;
 

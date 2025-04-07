@@ -1,7 +1,7 @@
 package com.jun.smartlineup.user.service;
 
 import com.jun.smartlineup.config.email.EmailService;
-import com.jun.smartlineup.exception.NoExistUserException;
+import com.jun.smartlineup.common.exception.NoExistUserException;
 import com.jun.smartlineup.user.domain.PasswordResetToken;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.ChangePasswordDto;

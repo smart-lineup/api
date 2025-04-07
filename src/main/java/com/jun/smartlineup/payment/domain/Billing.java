@@ -70,7 +70,7 @@ public class Billing {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public void changeInfo(PaymentInfoAddDto dto) {
-        this.price = dto.getPrice();
+        this.price = dto.getPlanType().getPrice();
         this.planType = dto.getPlanType();
     }
 
@@ -104,6 +104,11 @@ public class Billing {
     }
 
     public void cancel() {
+        renewal = false;
+    }
+
+    public void batchFail() {
+        status = BillingStatus.EXPIRED;
         renewal = false;
     }
 }

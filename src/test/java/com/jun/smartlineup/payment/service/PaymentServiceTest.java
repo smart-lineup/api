@@ -63,7 +63,6 @@ public class PaymentServiceTest {
         webUtilMock.close();
     }
 
-    // 테스트용 User 생성 헬퍼 메서드
     private User createTestUser() {
         User user = User.builder()
                 .name("Test User")
@@ -549,6 +548,8 @@ public class PaymentServiceTest {
         Billing updatedBilling = optionalBilling.get();
         assertEquals(BillingStatus.ACTIVE, updatedBilling.getStatus());
         assertTrue(updatedBilling.getRenewal());
+
+        assertEquals(Role.PREMIUM, user.getRole());
     }
 
     private BillingIssueKeyResponseDto getBillingIssueKeyResponseDto() {
