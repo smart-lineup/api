@@ -53,6 +53,9 @@ public class BillingProcessor {
         if (apiResult.isFail()) {
             billing.batchFail();
             user.updateRole(Role.FREE);
+
+            PaymentTransaction transaction = PaymentTransaction.payFailWithToss(billing, apiResult.getError());
+            paymentTransactionRepository.save(transaction);
             throw new BatchBillingApiException(apiResult.getError(), billing);
         }
 

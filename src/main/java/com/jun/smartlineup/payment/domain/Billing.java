@@ -111,4 +111,8 @@ public class Billing {
         status = BillingStatus.EXPIRED;
         renewal = false;
     }
+
+    public void changeRenewal(boolean renewal) {
+        this.renewal = renewal;
+    }
 }

@@ -1,6 +1,7 @@
 package com.jun.smartlineup.batch.runner;
 
 import com.jun.smartlineup.batch.processor.BillingProcessor;
+import com.jun.smartlineup.common.exception.BatchBillingFailException;
 import com.jun.smartlineup.payment.domain.Billing;
 import com.jun.smartlineup.payment.domain.BillingStatus;
 import com.jun.smartlineup.payment.repository.BillingRepository;
@@ -32,16 +33,25 @@ public class BillingRunner {
 
         int success = 0;
         int fail = 0;
+        StringBuilder failedBillingIds = new StringBuilder();
         for (Billing billing : billingList) {
             try {
                 billingProcessor.process(billing);
                 success++;
             } catch (Exception e) {
-                log.error("결제 실패: billingId={}, userId={}", billing.getId(), billing.getUser().getId(), e);
+                log.warn("결제 실패: billingId={}, userId={}", billing.getId(), billing.getUser().getId(), e);
                 fail++;
+                if (!failedBillingIds.isEmpty()) {
+                    failedBillingIds.append(", "); // 공백 대신 쉼표로 구분
+                }
+                failedBillingIds.append(billing.getId());
             }
         }
         log.info("Billing Runner 종료 - 성공: {}건, 실패: {}건", success, fail);
         log.info("Billing Runner 종료 시간: {}", LocalDateTime.now());
+
+        if (fail > 0) {
+            throw new BatchBillingFailException(failedBillingIds.toString());
+        }
     }
 }

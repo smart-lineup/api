@@ -95,7 +95,9 @@ public class PaymentService {
         ApiResult<TossPaymentResponseDto> apiResult = PaymentUtil.payToToss(billing, user, tossSecretKey);
 
         if (apiResult.isFail()) {
-            return TossFailUtil.getPayResponseDtoForFail(apiResult);
+            PaymentTransaction transaction = PaymentTransaction.payFailWithToss(billing, apiResult.getError());
+            paymentTransactionRepository.save(transaction);
+            return TossFailUtil.getPayResponseDtoForFail(apiResult.getError());
         }
         TossPaymentResponseDto responseDto = apiResult.getData();
 

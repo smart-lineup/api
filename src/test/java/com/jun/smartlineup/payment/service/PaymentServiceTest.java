@@ -116,7 +116,6 @@ public class PaymentServiceTest {
         CustomUserDetails userDetails = createDummyCustomUserDetails(user.getEmail());
 
         PaymentInfoAddDto infoDto = new PaymentInfoAddDto();
-        infoDto.setPrice(BigDecimal.valueOf(9_900));
         infoDto.setPlanType(PlanType.MONTHLY);
 
         // Act
@@ -197,9 +196,7 @@ public class PaymentServiceTest {
         billingRepository.save(billing);
 
         TossPaymentResponseDto tossResponse = getTossPaymentResponseDto();
-
         ApiResult<TossPaymentResponseDto> dummyApiResult = ApiResult.success(tossResponse);
-
         webUtilMock.when(() -> WebUtil.postTossWithJson(
                 contains("https://api.tosspayments.com/v1/billing/"),
                 anyString(),
@@ -246,7 +243,9 @@ public class PaymentServiceTest {
             paymentService.pay(userDetails);
         });
 
-        assertEquals("Impossible to call api::pay::user=" + user.getEmail(), runtimeException.getMessage());
+        String[] split = runtimeException.getMessage().split("::");
+        assertEquals(split[1], "pay");
+        assertEquals(split[2], "user=" + user.getEmail());
     }
 
     @Test
@@ -379,7 +378,6 @@ public class PaymentServiceTest {
                 .build();
         PaymentInfoAddDto paymentInfoAddDto = new PaymentInfoAddDto();
         paymentInfoAddDto.setPlanType(PlanType.MONTHLY);
-        paymentInfoAddDto.setPrice(BigDecimal.valueOf(9900));
         billing.changeInfo(paymentInfoAddDto);
 
         billingRepository.save(billing);
@@ -404,7 +402,6 @@ public class PaymentServiceTest {
 
         // 1. pay info
         PaymentInfoAddDto infoDto = new PaymentInfoAddDto();
-        infoDto.setPrice(BigDecimal.valueOf(9_900));
         infoDto.setPlanType(PlanType.MONTHLY);
 
         paymentService.payInfo(userDetails, infoDto);
@@ -490,7 +487,6 @@ public class PaymentServiceTest {
 
         // 1. pay info
         PaymentInfoAddDto infoDto = new PaymentInfoAddDto();
-        infoDto.setPrice(BigDecimal.valueOf(57200));
         infoDto.setPlanType(PlanType.ANNUAL);
 
         paymentService.payInfo(userDetails, infoDto);

@@ -37,8 +37,7 @@ public class TossFailUtil {
         return failMap;
     }
 
-    public static PayResponseDto getPayResponseDtoForFail(ApiResult<TossPaymentResponseDto> apiResult) {
-        TossErrorResponse error = apiResult.getError();
+    public static PayResponseDto getPayResponseDtoForFail(TossErrorResponse error) {
         if (TossFailUtil.isFailBaseOnUser(error.getCode())) {
             return PayResponseDto.builder()
                     .isSuccess(false)

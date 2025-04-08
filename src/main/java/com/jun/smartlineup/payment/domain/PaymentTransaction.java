@@ -1,6 +1,7 @@
 package com.jun.smartlineup.payment.domain;
 
 
+import com.jun.smartlineup.payment.dto.TossErrorResponse;
 import com.jun.smartlineup.payment.dto.TossPaymentResponseDto;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
@@ -56,6 +57,9 @@ public class PaymentTransaction {
     @Enumerated(EnumType.STRING)
     private PayStatus status;
 
+    private String failCode;
+    private String failMessage;
+
     @Builder.Default
     @CreatedDate
     @Column(updatable = false)
@@ -76,6 +80,18 @@ public class PaymentTransaction {
                 .mid(dto.getMId())
                 .receiptUrl(dto.getReceiptUrl())
                 .status(PayStatus.PAID)
+                .build();
+    }
+
+    public static PaymentTransaction payFailWithToss(Billing billing, TossErrorResponse errorResponse) {
+        return PaymentTransaction.builder()
+                .user(billing.getUser())
+                .billing(billing)
+                .amount(billing.getPrice())
+                .paymentMethod(PaymentMethod.TOSS)
+                .status(PayStatus.FAIL)
+                .failCode(errorResponse.getCode())
+                .failMessage(errorResponse.getMessage())
                 .build();
     }
 }
