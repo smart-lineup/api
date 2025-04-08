@@ -3,9 +3,12 @@ package com.jun.smartlineup.payment.controller;
 import com.jun.smartlineup.payment.dto.*;
 import com.jun.smartlineup.payment.service.PaymentService;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
+import com.jun.smartlineup.user.service.UserService;
 import com.jun.smartlineup.user.utils.UserUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +20,7 @@ import java.util.List;
 @RequestMapping("/payment")
 public class PaymentController {
     private final PaymentService paymentService;
+    private final UserService userService;
 
     @PostMapping("/issue/key")
     public ResponseEntity<String> issueKey(@Valid @RequestBody BillingKeyRequestDto dto) {
@@ -43,7 +47,10 @@ public class PaymentController {
     public ResponseEntity<PayResponseDto> pay() {
         CustomUserDetails userDetails = UserUtil.getUserDetails();
         PayResponseDto payDto = paymentService.pay(userDetails);
-        return ResponseEntity.ok(payDto);
+        ResponseCookie responseCookie = userService.tokenReset(userDetails);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .body(payDto);
     }
 
     @GetMapping("/plan-type")

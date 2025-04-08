@@ -1,6 +1,10 @@
 package com.jun.smartlineup.config.auth;
 
+import com.jun.smartlineup.user.domain.Role;
+import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
+import com.jun.smartlineup.user.dto.OAuth2UserImpl;
+import com.jun.smartlineup.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -33,6 +37,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtTokenProvider implements AuthenticationSuccessHandler {
 
+    private final UserRepository userRepository;
     @Value("${jwt.secret-key}")
     private String secretKey;
 
@@ -55,22 +60,11 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
         this.key = Keys.hmacShaKeyFor(decodedKey);
     }
 
-    public String createToken(Authentication authentication) {
-        OAuth2User user = (OAuth2User) authentication.getPrincipal();
-
-        return Jwts.builder()
-                .subject(user.getAttribute("email"))
-                .claim("name", user.getAttribute("name"))
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(key)
-                .compact();
-    }
-
     public String createToken(com.jun.smartlineup.user.domain.User user) {
         return Jwts.builder()
                 .subject(user.getEmail())
                 .claim("name", user.getName())
+                .claim("role", user.getRole())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key)
@@ -102,22 +96,20 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
 
         String email = claims.getSubject();
         String name = claims.get("name", String.class);
+        Role role = Role.fromString(claims.get("role", String.class));
 
-        CustomUserDetails userDetails = new CustomUserDetails(email, name, Collections.emptyList());
+        CustomUserDetails userDetails = new CustomUserDetails(email, name, role, Collections.emptyList());
         return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        ResponseCookie jwtCookie = getJwtCookie(authentication);
+        OAuth2UserImpl auth2User = (OAuth2UserImpl) authentication.getPrincipal();
+        User user = auth2User.getUser();
+        ResponseCookie jwtCookie = getJwtCookie(user);
 
         response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
         response.sendRedirect(frontendUrl + "/");
-    }
-
-    public ResponseCookie getJwtCookie(Authentication authentication) {
-        String token = createToken(authentication);
-        return cookieFactory(token, 7 * 24 * 60 * 60);
     }
 
     public ResponseCookie getJwtCookie(com.jun.smartlineup.user.domain.User user) {

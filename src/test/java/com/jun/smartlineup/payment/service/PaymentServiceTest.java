@@ -12,7 +12,10 @@ import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
 import com.jun.smartlineup.utils.WebUtil;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -24,7 +27,6 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 

@@ -3,6 +3,7 @@ package com.jun.smartlineup.payment.service;
 import com.jun.smartlineup.common.exception.ImpossibleRequestException;
 import com.jun.smartlineup.common.exception.NotAvailableRefundException;
 import com.jun.smartlineup.common.exception.TossApiException;
+import com.jun.smartlineup.config.auth.JwtTokenProvider;
 import com.jun.smartlineup.payment.domain.Billing;
 import com.jun.smartlineup.payment.domain.BillingStatus;
 import com.jun.smartlineup.payment.domain.PaymentCancel;
@@ -21,6 +22,7 @@ import com.jun.smartlineup.user.utils.UserUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;

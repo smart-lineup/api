@@ -68,11 +68,8 @@ public class User {
         this.role = role;
     }
 
-    public User update(String name, String picture, Role role) {
-        this.name = name;
+    public User updatePicture(String picture) {
         this.picture = picture;
-        this.role = role;
-
         return this;
     }
 

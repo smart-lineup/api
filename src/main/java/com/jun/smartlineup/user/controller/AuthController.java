@@ -89,6 +89,6 @@ public class AuthController {
 
         Authentication authentication = jwtTokenProvider.getAuthenticationFromToken(token);
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
-        return ResponseEntity.ok(user.getName() + ":" + user.getUsername());
+        return ResponseEntity.ok(user.getName() + ":" + user.getUsername() + ":" + user.getRole());
     }
 }

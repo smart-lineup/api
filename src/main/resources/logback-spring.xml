@@ -20,6 +20,9 @@
     </appender>
 
     <springProfile name="local">
+        <root level="DEBUG">
+            <appender-ref ref="CONSOLE" />
+        </root>
         <include resource="org/springframework/boot/logging/logback/base.xml"/>
     </springProfile>
 

@@ -1,5 +1,6 @@
 package com.jun.smartlineup.user.dto;
 
+import com.jun.smartlineup.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -31,6 +32,4 @@ public class OAuthAttributes {
                 .nameAttributeKey(attributeName)
                 .build();
     }
-
-
 }

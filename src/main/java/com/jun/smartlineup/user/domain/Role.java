@@ -18,4 +18,11 @@ public enum Role {
     public static List<Role> getAll() {
         return Arrays.stream(Role.values()).toList();
     }
+
+    public static Role fromString(String s) {
+        if (s.equals(Role.PREMIUM.key)) {
+            return Role.PREMIUM;
+        }
+        return Role.FREE;
+    }
 }

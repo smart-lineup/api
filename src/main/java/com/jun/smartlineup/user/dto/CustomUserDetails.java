@@ -1,5 +1,6 @@
 package com.jun.smartlineup.user.dto;
 
+import com.jun.smartlineup.user.domain.Role;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,11 +10,14 @@ public class CustomUserDetails implements UserDetails {
     private final String email;
     @Getter
     private final String name;
+    @Getter
+    private final Role role;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(String email, String name, Collection<? extends GrantedAuthority> authorities) {
+    public CustomUserDetails(String email, String name, Role role, Collection<? extends GrantedAuthority> authorities) {
         this.email = email;
         this.name = name;
+        this.role = role;
         this.authorities = authorities;
     }
 

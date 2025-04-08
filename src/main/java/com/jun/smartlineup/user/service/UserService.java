@@ -44,36 +44,32 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
         String userNameAttributeName = userRequest.getClientRegistration()
                 .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
 
-        OAuthAttributes attributes = OAuthAttributes.of(
-                registrationId,
-                userNameAttributeName,
-                oAuth2User.getAttributes()
-        );
-
-        User user = Oauth2Upsert(attributes);
-        return new OAuth2UserImpl(
-                Collections.singleton(new SimpleGrantedAuthority(user.getRole().name())),
-                attributes.getAttributes(),
-                attributes.getNameAttributeKey()
-        );
-    }
-
-    private User Oauth2Upsert(OAuthAttributes attributes) {
-        User user = userRepository.findByEmail(attributes.getEmail())
-                .map(entity -> entity.update(attributes.getName(), attributes.getPicture(), entity.getRole()))
+        User user = userRepository.findByEmail(oAuth2User.getAttribute("email"))
+                .map(entity -> entity.updatePicture(oAuth2User.getAttribute("picture")))
                 .orElseGet(() -> User.builder()
-                        .name(attributes.getName())
-                        .email(attributes.getEmail())
-                        .picture(attributes.getPicture())
+                        .name(oAuth2User.getName())
+                        .email(oAuth2User.getAttribute("email"))
+                        .picture(oAuth2User.getAttribute("picture"))
                         .role(Role.FREE)
                         .isOAuthLogin(true)
                         .isVerified(true)
                         .uuid(UUID.randomUUID().toString())
                         .build()
                 );
-
         userRepository.save(user);
-        return user;
+
+        OAuthAttributes attributes = OAuthAttributes.of(
+                registrationId,
+                userNameAttributeName,
+                oAuth2User.getAttributes()
+        );
+
+        return new OAuth2UserImpl(
+                Collections.singleton(new SimpleGrantedAuthority(user.getRole().name())),
+                attributes.getAttributes(),
+                attributes.getNameAttributeKey(),
+                user
+        );
     }
 
     public User convertUser(OAuth2User oAuth2User) {
@@ -144,6 +140,11 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
     public ResponseCookie updateProfile(CustomUserDetails userDetails, UpdateProfileRequestDto dto) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
         user.updateProfile(dto);
+        return jwtTokenProvider.getJwtCookie(user);
+    }
+
+    public ResponseCookie tokenReset(CustomUserDetails userDetails) {
+        User user = UserUtil.ConvertUser(userRepository, userDetails);
         return jwtTokenProvider.getJwtCookie(user);
     }
 }

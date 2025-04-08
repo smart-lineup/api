@@ -27,10 +27,6 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(jwtTokenProvider.corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().permitAll()
-                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(userService))
