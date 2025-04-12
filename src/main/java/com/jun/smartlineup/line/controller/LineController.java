@@ -5,6 +5,7 @@ import com.jun.smartlineup.line.dto.LineRemoveRequestDto;
 import com.jun.smartlineup.line.dto.LineResponseDto;
 import com.jun.smartlineup.line.service.LineService;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
+import com.jun.smartlineup.user.utils.UserUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +61,13 @@ public class LineController {
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
         lineService.changeName(user, dto);
+        return ResponseEntity.ok("ok");
+    }
+
+    @PutMapping("/{id}/queuePositionVisible")
+    public ResponseEntity<String> queuePositionVisible(@PathVariable Long id) {
+        lineService.changeIsQueuePositionVisibleToAttendee(UserUtil.getUserDetails(), id);
+
         return ResponseEntity.ok("ok");
     }
 }

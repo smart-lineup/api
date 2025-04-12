@@ -10,12 +10,14 @@ public class LineResponseDto {
     private Long id;
     private String name;
     private String uuid;
+    private Boolean isQueuePositionVisibleToAttendee;
 
     public static LineResponseDto fromEntity(Line line) {
         return LineResponseDto.builder()
                 .id(line.getId())
                 .name(line.getName())
                 .uuid(line.getUuid())
+                .isQueuePositionVisibleToAttendee(line.getIsQueuePositionVisibleToAttendee())
                 .build();
     }
 }

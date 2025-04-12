@@ -34,6 +34,9 @@ public class Line {
     private String uuid;
 
     @Builder.Default
+    private Boolean isQueuePositionVisibleToAttendee = true;
+
+    @Builder.Default
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -50,5 +53,9 @@ public class Line {
 
     public void delete() {
         deleteAt = LocalDateTime.now();
+    }
+
+    public void changeIsQueuePositionVisibleToAttendee() {
+        isQueuePositionVisibleToAttendee = !isQueuePositionVisibleToAttendee;
     }
 }

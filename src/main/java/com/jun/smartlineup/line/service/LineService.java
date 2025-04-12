@@ -12,4 +12,6 @@ public interface LineService {
     void remove(CustomUserDetails userDetails, Long id);
 
     void changeName(CustomUserDetails userDetails, LineChangeNameRequestDto dto);
+
+    void changeIsQueuePositionVisibleToAttendee(CustomUserDetails userDetails, Long lineId);
 }

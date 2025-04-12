@@ -1,5 +1,6 @@
 package com.jun.smartlineup.line.service;
 
+import com.jun.smartlineup.common.exception.ImpossibleRequestException;
 import com.jun.smartlineup.common.exception.NoExistUserException;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.line.dto.LineChangeNameRequestDto;
@@ -18,11 +19,11 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class LineServiceImpl implements LineService {
     private final LineRepository lineRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     public void add(CustomUserDetails userDetails, String name) {
         Optional<User> OptionalUser = userRepository.findByEmail(userDetails.getUsername());
         User user = OptionalUser.orElseThrow(NoExistUserException::new);
@@ -42,6 +43,7 @@ public class LineServiceImpl implements LineService {
         return linesByUser.stream().map(LineResponseDto::fromEntity).toList();
     }
 
+    @Transactional
     public void remove(CustomUserDetails userDetails, Long id) {
         Optional<User> optionalUser = userRepository.findByEmail(userDetails.getUsername());
         User user = optionalUser.orElseThrow(NoExistUserException::new);
@@ -53,6 +55,7 @@ public class LineServiceImpl implements LineService {
         line.delete();
     }
 
+    @Transactional
     public void changeName(CustomUserDetails userDetails, LineChangeNameRequestDto dto) {
         Optional<User> OptionalUser = userRepository.findByEmail(userDetails.getUsername());
         User user = OptionalUser.orElseThrow(NoExistUserException::new);
@@ -62,5 +65,16 @@ public class LineServiceImpl implements LineService {
                 new RuntimeException("Remove error::No correct::" + user.getEmail() + "::" + dto.getId()));
 
         line.changeName(dto.getName());
+    }
+
+    @Transactional
+    public void changeIsQueuePositionVisibleToAttendee(CustomUserDetails userDetails, Long lineId) {
+        Optional<User> OptionalUser = userRepository.findByEmail(userDetails.getUsername());
+        User user = OptionalUser.orElseThrow(NoExistUserException::new);
+
+        Optional<Line> optionalLine = lineRepository.getLineByIdAndUserAndDeleteAtIsNull(lineId, user);
+        Line line = optionalLine.orElseThrow(() -> new ImpossibleRequestException("changeIsQueuePositionVisibleToAttendee", user));
+
+        line.changeIsQueuePositionVisibleToAttendee();
     }
 }
