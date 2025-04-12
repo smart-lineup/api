@@ -66,4 +66,26 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void feedbackEmail(String title, String content, Boolean isPremium) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo("pkt0758@gmail.com");
+        helper.setSubject("[Smart Line up] 건의하기");
+
+        String htmlContent = "<div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>"
+                + "<h2 style='color: #007BFF;'>Smart Line up</h2>"
+                + "<p><strong>제목:</strong> " + title + "</p>"
+                + "<p><strong>프리미엄 사용자 여부:</strong> " + (isPremium ? "예" : "아니오") + "</p>"
+                + "<p><strong>내용:</strong></p>"
+                + "<div style='margin: 12px 0; padding: 10px; background-color: #f9f9f9; border-radius: 5px;'>"
+                + content.replace("\n", "<br>")
+                + "</div>"
+                + "</div>";
+
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+    }
 }
