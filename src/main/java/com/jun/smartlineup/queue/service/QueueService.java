@@ -16,8 +16,6 @@ public interface QueueService {
 
     List<Queue> findQueues(CustomUserDetails user, Long lineId);
 
-    void addFromAttendee(Line line, Attendee attendee);
-
     void reorder(CustomUserDetails userDetails, QueueReorderRequestDto dto);
 
     void changeStatus(CustomUserDetails userDetails, Long queueId, String status);

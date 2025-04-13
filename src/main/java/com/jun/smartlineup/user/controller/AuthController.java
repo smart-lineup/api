@@ -45,11 +45,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequestDto loginRequestDto,
-                                        HttpServletResponse response) {
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
         ResponseCookie jwtCookie = userService.login(loginRequestDto);
-        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
-        return ResponseEntity.ok("login success");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .body("login success");
     }
 
     @PostMapping("/find/id")

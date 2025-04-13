@@ -11,6 +11,7 @@ import com.jun.smartlineup.queue.dto.QueueAttendeeChangeRequestDto;
 import com.jun.smartlineup.queue.dto.QueueBatchAddRequestDto;
 import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
 import com.jun.smartlineup.queue.repository.QueueRepository;
+import com.jun.smartlineup.queue.util.QueueUtil;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
@@ -50,42 +51,7 @@ public class QueueServiceImpl implements QueueService {
             return Collections.emptyList();
         }
 
-        // ID를 키로 하여 맵으로 변환 (빠른 조회를 위해)
-        Map<Long, Queue> queueMap = allQueues.stream()
-                .collect(Collectors.toMap(Queue::getId, queue -> queue));
-
-        // 첫 번째 항목 찾기
-        Queue firstQueue = allQueues.stream()
-                .filter(queue -> queue.getPrevious() == null)
-                .findFirst()
-                .orElse(null);
-
-        if (firstQueue == null) {
-            return Collections.emptyList();
-        }
-
-        // 링크를 따라가며 순서 재구성
-        List<Queue> orderedQueue = new ArrayList<>();
-        Queue current = firstQueue;
-        while (current != null) {
-            orderedQueue.add(current);
-            Long nextId = current.getNext() != null ? current.getNext().getId() : null;
-            current = nextId != null ? queueMap.get(nextId) : null;
-        }
-
-        return orderedQueue;
-    }
-
-    @Override
-    public void addFromAttendee(Line line, Attendee attendee) {
-        Optional<Queue> optionalQueue = queueRepository.findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line);
-        Queue queue = Queue.createQueue(line, attendee);
-        if (optionalQueue.isPresent()) {
-            Queue previous = optionalQueue.get();
-            queue.setPrevious(previous);
-            previous.setNext(queue);
-        }
-        queueRepository.save(queue);
+        return QueueUtil.orderQueueList(allQueues);
     }
 
     @Override
@@ -235,16 +201,7 @@ public class QueueServiceImpl implements QueueService {
         Attendee attendee = dto.getAttendee().toEntity(user);
         attendeeRepository.save(attendee);
 
-        Optional<Queue> optionalPrevious = queueRepository.findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line);
-
-        Queue queue = Queue.createQueue(line, attendee);
-        if (optionalPrevious.isPresent()) {
-            Queue previous = optionalPrevious.get();
-
-            queue.setPrevious(previous);
-            previous.setNext(queue);
-        }
-        queueRepository.save(queue);
+        QueueUtil.addQueue(queueRepository, line, attendee);
     }
 
 }

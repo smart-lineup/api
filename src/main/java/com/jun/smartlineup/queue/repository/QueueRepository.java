@@ -1,5 +1,6 @@
 package com.jun.smartlineup.queue.repository;
 
+import com.jun.smartlineup.attendee.dao.FindPositionDao;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.user.domain.User;
@@ -14,6 +15,19 @@ public interface QueueRepository extends JpaRepository<Queue, Long> {
 
     @Query("SELECT q FROM Queue q WHERE q.line.id = :lineId AND q.line.user = :user AND q.deletedAt is null")
     List<Queue> findAllByUserAndLine_Id(@Param("user") User user, @Param("lineId") Long lineId);
+
+    @Query("""
+    SELECT new com.jun.smartlineup.attendee.dao.FindPositionDao(
+        q.id,
+        q.next.id,
+        q.previous.id,
+        q.status,
+        a.phone
+    ) FROM Queue q
+    left join Attendee a on a.id = q.attendee.id
+    WHERE q.line.id = :lineId AND q.deletedAt is null
+    """)
+    List<FindPositionDao> findAllByLine_IdForAttendee(@Param("lineId") Long lineId);
 
     Optional<Queue> findFirstByLineAndDeletedAtIsNullOrderByIdDesc(Line line);
 

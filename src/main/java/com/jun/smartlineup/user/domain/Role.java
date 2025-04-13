@@ -25,4 +25,8 @@ public enum Role {
         }
         return Role.FREE;
     }
+
+    public boolean isPremium() {
+        return this.key.equals("PREMIUM");
+    }
 }
