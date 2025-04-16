@@ -1,5 +1,6 @@
-package com.jun.smartlineup.common.exception;
+package com.jun.smartlineup.common;
 
+import com.jun.smartlineup.common.exception.*;
 import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,5 +47,17 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<String> messagingException(MessagingException e) {
         System.out.println(e.getMessage());
         return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ResetEmailSnsLoginException.class)
+    public ResponseEntity<String> resetEmailSnsLoginException(ResetEmailSnsLoginException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @ExceptionHandler(DuplicationAttendeeException.class)
+    public ResponseEntity<String> duplicationAttendeeException(DuplicationAttendeeException e) {
+        return ResponseEntity.ok(e.getMessage());
     }
 }

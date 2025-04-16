@@ -1,10 +1,12 @@
 package com.jun.smartlineup.attendee.service;
 
-import com.jun.smartlineup.attendee.dao.FindPositionDao;
+import com.jun.smartlineup.attendee.dao.QueueDao;
 import com.jun.smartlineup.attendee.domain.Attendee;
 import com.jun.smartlineup.attendee.dto.AttendeeAddRequestDto;
+import com.jun.smartlineup.attendee.dto.AttendeeDeleteRequestDto;
 import com.jun.smartlineup.attendee.dto.AttendeePositionResponseDto;
 import com.jun.smartlineup.attendee.repository.AttendeeRepository;
+import com.jun.smartlineup.attendee.util.AttendeeUtil;
 import com.jun.smartlineup.common.exception.ImpossibleRequestException;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.line.repository.LineRepository;
@@ -22,13 +24,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class AttendeeService {
     private final AttendeeRepository attendeeRepository;
     private final LineRepository lineRepository;
     private final QueueRepository queueRepository;
 
+    @Transactional
     public void add(AttendeeAddRequestDto dto) {
         Optional<Line> optionalLine = lineRepository.findByUuidAndDeleteAtIsNull(dto.getUuid());
         Line line = optionalLine.orElseThrow(() -> new RuntimeException("No exist uuid: " + dto.getUuid()));
@@ -37,7 +39,11 @@ public class AttendeeService {
         if (!attendeeCanJoin(dto.getUuid())) {
             throw new ImpossibleRequestException("add", user);
         }
-        Attendee attendee = Attendee.fromDto(line.getUser(), dto);
+        List<QueueDao> list = queueRepository.findAllByLine_IdForAttendee(line.getId());
+        AttendeeUtil.validBeforeAdd(dto.getPhone(), list);
+
+        Attendee attendee = attendeeRepository.findByNameAndPhone(dto.getName(), dto.getPhone())
+                .orElse(Attendee.fromDto(line.getUser(), dto));
         attendeeRepository.save(attendee);
         QueueUtil.addQueue(queueRepository, line, attendee);
     }
@@ -62,12 +68,12 @@ public class AttendeeService {
             return new AttendeePositionResponseDto(false, 0, 0);
         }
 
-        List<FindPositionDao> allQueues = queueRepository.findAllByLine_IdForAttendee(line.getId());
+        List<QueueDao> allQueues = queueRepository.findAllByLine_IdForAttendee(line.getId());
         if (allQueues.isEmpty()) {
             return new AttendeePositionResponseDto(true, 0, 0);
         }
 
-        List<FindPositionDao> queueList = orderQueueList(allQueues);
+        List<QueueDao> queueList = orderQueueList(allQueues);
 
         int index = 0;
         for (int i = 0; i < queueList.size(); i++) {
@@ -80,12 +86,12 @@ public class AttendeeService {
         return new AttendeePositionResponseDto(true, index, queueList.size());
     }
 
-    private List<FindPositionDao> orderQueueList(List<FindPositionDao> allQueues) {
-        Map<Long, FindPositionDao> queueMap = allQueues.stream()
-                .collect(Collectors.toMap(FindPositionDao::id, queue -> queue));
+    private List<QueueDao> orderQueueList(List<QueueDao> allQueues) {
+        Map<Long, QueueDao> queueMap = allQueues.stream()
+                .collect(Collectors.toMap(QueueDao::id, queue -> queue));
 
         // 첫 번째 항목 찾기
-        FindPositionDao firstQueue = allQueues.stream()
+        QueueDao firstQueue = allQueues.stream()
                 .filter(queue -> queue.prevId() == null)
                 .findFirst()
                 .orElse(null);
@@ -95,8 +101,8 @@ public class AttendeeService {
         }
 
         // 링크를 따라가며 순서 재구성
-        List<FindPositionDao> orderedQueue = new ArrayList<>();
-        FindPositionDao current = firstQueue;
+        List<QueueDao> orderedQueue = new ArrayList<>();
+        QueueDao current = firstQueue;
         while (current != null) {
             if (current.status() == QueueStatus.WAITING) {
                 orderedQueue.add(current);
@@ -106,5 +112,11 @@ public class AttendeeService {
         }
 
         return orderedQueue;
+    }
+
+    @Transactional
+    public void deleteAttendee(AttendeeDeleteRequestDto dto) {
+        List<String> list = queueRepository.deleteAndReturnPhones(dto.uuid(), dto.phone());
+        System.out.println(list);
     }
 }

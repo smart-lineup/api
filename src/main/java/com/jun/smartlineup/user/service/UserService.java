@@ -47,7 +47,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
         User user = userRepository.findByEmail(oAuth2User.getAttribute("email"))
                 .map(entity -> entity.updatePicture(oAuth2User.getAttribute("picture")))
                 .orElseGet(() -> User.builder()
-                        .name(oAuth2User.getName())
+                        .name(oAuth2User.getAttribute("name"))
                         .email(oAuth2User.getAttribute("email"))
                         .picture(oAuth2User.getAttribute("picture"))
                         .role(Role.FREE)

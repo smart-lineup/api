@@ -1,10 +1,11 @@
 package com.jun.smartlineup.attendee.domain;
 
+import com.jun.smartlineup.attendee.dao.QueueDao;
 import com.jun.smartlineup.attendee.dto.AttendeeAddRequestDto;
-import com.jun.smartlineup.line.domain.Line;
+import com.jun.smartlineup.attendee.util.AttendeeUtil;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,14 +34,12 @@ public class Attendee {
     private User user;
 
     private String name;
-    //010-0000-0000
-    @Size(min = 13, max = 13)
+
+    @Pattern(regexp = "^\\d{2,3}-\\d{4}-\\d{4}$", message = "전화번호는 02-0000-0000 또는 010-0000-0000 형식이어야 합니다.")
     private String phone;
 
-    @Lob
-    @Column(columnDefinition = "JSON")
     @Builder.Default
-    private String info= "{}";
+    private String info = "{}";
 
     @Builder.Default
     @CreatedDate
@@ -63,5 +62,12 @@ public class Attendee {
         this.name = name;
         this.phone = phone;
         this.info = info;
+    }
+
+    public void pasteFromAttendee(Attendee attendee) {
+        this.id = attendee.getId();
+    }
+    public void pasteFromDao(QueueDao attendee) {
+        this.id = attendee.id();
     }
 }

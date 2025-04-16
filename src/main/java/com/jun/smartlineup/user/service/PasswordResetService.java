@@ -1,5 +1,6 @@
 package com.jun.smartlineup.user.service;
 
+import com.jun.smartlineup.common.exception.ResetEmailSnsLoginException;
 import com.jun.smartlineup.config.email.EmailService;
 import com.jun.smartlineup.common.exception.NoExistUserException;
 import com.jun.smartlineup.user.domain.PasswordResetToken;
@@ -37,8 +38,11 @@ public class PasswordResetService {
     }
 
     public void sendResetEmail(String email) throws MessagingException {
-        userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));
+        if (user.getIsOAuthLogin()) {
+            throw new ResetEmailSnsLoginException();
+        }
 
         String token = generateResetToken();
         PasswordResetToken resetToken = PasswordResetToken.builder()

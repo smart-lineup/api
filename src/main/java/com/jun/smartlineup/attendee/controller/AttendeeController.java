@@ -1,10 +1,10 @@
 package com.jun.smartlineup.attendee.controller;
 
 import com.jun.smartlineup.attendee.dto.AttendeeAddRequestDto;
+import com.jun.smartlineup.attendee.dto.AttendeeDeleteRequestDto;
 import com.jun.smartlineup.attendee.dto.AttendeePositionResponseDto;
 import com.jun.smartlineup.attendee.dto.CanJoinResponseDto;
 import com.jun.smartlineup.attendee.service.AttendeeService;
-import com.jun.smartlineup.line.service.LineService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/attendee")
 public class AttendeeController {
     private final AttendeeService attendeeService;
-    private final LineService lineService;
 
     @PostMapping("/add")
     public ResponseEntity<String> add(@Valid @RequestBody AttendeeAddRequestDto dto) {
@@ -32,5 +31,11 @@ public class AttendeeController {
     @GetMapping("/{uuid}")
     public ResponseEntity<AttendeePositionResponseDto> getPosition(@PathVariable String uuid, @RequestParam("phone") String phone) {
         return ResponseEntity.ok(attendeeService.findPosition(uuid, phone));
+    }
+
+    @DeleteMapping("/cancel")
+    public ResponseEntity<String> delete(@Valid @RequestBody AttendeeDeleteRequestDto dto) {
+        attendeeService.deleteAttendee(dto);
+        return ResponseEntity.ok("ok");
     }
 }
