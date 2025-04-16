@@ -6,9 +6,6 @@ import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.line.dto.LineChangeNameRequestDto;
 import com.jun.smartlineup.line.dto.LineResponseDto;
 import com.jun.smartlineup.line.repository.LineRepository;
-import com.jun.smartlineup.queue.domain.Queue;
-import com.jun.smartlineup.queue.repository.QueueRepository;
-import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 import com.jun.smartlineup.user.repository.UserRepository;
@@ -42,7 +39,7 @@ public class LineServiceImpl implements LineService {
         Optional<User> OptionalUser = userRepository.findByEmail(userDetails.getUsername());
         User user = OptionalUser.orElseThrow(NoExistUserException::new);
 
-        List<Line> linesByUser = lineRepository.getLinesByUserAndDeleteAtIsNull(user);
+        List<Line> linesByUser = lineRepository.getLinesByUserAndDeleteAtIsNullOrderByCreatedAt(user);
         return linesByUser.stream().map(LineResponseDto::fromEntity).toList();
     }
 

@@ -72,8 +72,12 @@ public class PaymentController {
 
     @PostMapping("/refund")
     public ResponseEntity<String> refund() {
-        paymentService.refund(UserUtil.getUserDetails());
-        return ResponseEntity.ok("ok");
+        CustomUserDetails userDetails = UserUtil.getUserDetails();
+        paymentService.refund(userDetails);
+        ResponseCookie responseCookie = userService.tokenReset(userDetails);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .body("ok");
     }
 
     @PutMapping("/cancel")
