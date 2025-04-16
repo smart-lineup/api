@@ -1,7 +1,10 @@
 package com.jun.smartlineup.queue.service;
 
+import com.jun.smartlineup.attendee.dao.FindPositionDao;
+import com.jun.smartlineup.attendee.dao.QueueDao;
 import com.jun.smartlineup.attendee.domain.Attendee;
 import com.jun.smartlineup.attendee.repository.AttendeeRepository;
+import com.jun.smartlineup.attendee.util.AttendeeUtil;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.line.repository.LineRepository;
 import com.jun.smartlineup.queue.domain.Queue;
@@ -154,20 +157,44 @@ public class QueueServiceImpl implements QueueService {
         Optional<Line> optionalLine = lineRepository.getLineByIdAndUserAndDeleteAtIsNull(dto.getLineId(), user);
         Line line = optionalLine.orElseThrow(() -> new RuntimeException("Not Exist Line::batchAdd::user=" + user.getEmail() + ", lineId=" + dto.getLineId()));
 
-        List<Attendee> attendees = dto.getAttendees().stream()
-                .map(a -> a.toEntity(user))
-                .toList();
+        List<QueueDao> daoList = queueRepository.findQueueWithAttendeeByLine(line);
+        List<Attendee> attendees = getAttendeeWithoutDuplication(dto, daoList, user);
+
+        Map<String, QueueDao> queueMap = daoList.stream()
+                .collect(Collectors.toMap(
+                        a -> a.attendee().getName() + ":" + a.attendee().getPhone(),
+                        a -> a,
+                        (existing, dao) -> existing
+                ));
 
         int size = 50;
         for (int i = 0; i < attendees.size(); i += size) {
-            List<Attendee> attendeeChunk = attendees.subList(i, Math.min(i + size, attendees.size()));
+            List<Attendee> originChunk = attendees.subList(i, Math.min(i + size, attendees.size()));
+            List<Attendee> attendeeChunk = originChunk.stream()
+                    .filter(a -> !queueMap.containsKey(a.getName() + ":" + a.getPhone()))
+                    .toList();
+
+            // Save new attendees
             attendeeRepository.saveAllAndFlush(attendeeChunk);
 
-            Queue lastQueueBeforeChunk = queueRepository
-                    .findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line)
+            Map<String, Attendee> insertedAttendeeMap = attendeeChunk.stream().collect(Collectors.toMap(
+                    a -> a.getName() + ":" + a.getPhone(),
+                    a -> a
+            ));
+
+            List<Attendee> combineAttendee = originChunk.stream()
+                    .map(a -> {
+                        if (!queueMap.containsKey(a.getName() + ":" + a.getPhone())) {
+                            return insertedAttendeeMap.get(a.getName() + ":" + a.getPhone());
+                        }
+                        return queueMap.get(a.getName() + ":" + a.getPhone()).attendee();
+                    })
+                    .toList();
+
+            Queue lastQueueBeforeChunk = queueRepository.findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line)
                     .orElse(null);
 
-            List<Queue> queueChunk = buildQueuesWithLinks(attendeeChunk, line, lastQueueBeforeChunk);
+            List<Queue> queueChunk = buildQueuesWithLinks(combineAttendee, line, lastQueueBeforeChunk);
 
             if (lastQueueBeforeChunk != null) {
                 queueRepository.save(lastQueueBeforeChunk);
@@ -177,6 +204,18 @@ public class QueueServiceImpl implements QueueService {
             em.flush();
             em.clear();
         }
+    }
+
+    private List<Attendee> getAttendeeWithoutDuplication(QueueBatchAddRequestDto dto, List<QueueDao> list, User user) {
+        Set<String> phoneSet = list.stream()
+                .filter(dao -> dao.queue().getStatus() == QueueStatus.WAITING)
+                .map(dao -> dao.attendee().getPhone())
+                .collect(Collectors.toSet());
+
+        return dto.getAttendees().stream()
+                .filter(a -> !phoneSet.contains(a.getPhone()))
+                .map(a -> a.toEntity(user))
+                .toList();
     }
 
     private List<Queue> buildQueuesWithLinks(List<Attendee> attendees, Line line, Queue previous) {
@@ -198,7 +237,11 @@ public class QueueServiceImpl implements QueueService {
         Optional<Line> optionalLine = lineRepository.getLineByIdAndUserAndDeleteAtIsNull(dto.getLineId(), user);
         Line line = optionalLine.orElseThrow(() -> new RuntimeException("Not Exist Line::addQueueByUser::user=" + user.getEmail() + ", lineId=" + dto.getLineId()));
 
-        Attendee attendee = dto.getAttendee().toEntity(user);
+        List<FindPositionDao> list = queueRepository.findAllByLine_IdForAttendee(line.getId());
+        AttendeeUtil.validBeforeAdd(dto.getAttendee().getPhone(), list);
+
+        Attendee attendee = attendeeRepository.findByNameAndPhone(dto.getAttendee().getName(), dto.getAttendee().getPhone())
+                .orElse(dto.getAttendee().toEntity(user));
         attendeeRepository.save(attendee);
 
         QueueUtil.addQueue(queueRepository, line, attendee);

@@ -1,8 +1,7 @@
 package com.jun.smartlineup.attendee.domain;
 
-import com.jun.smartlineup.attendee.dao.QueueDao;
+import com.jun.smartlineup.attendee.dao.FindPositionDao;
 import com.jun.smartlineup.attendee.dto.AttendeeAddRequestDto;
-import com.jun.smartlineup.attendee.util.AttendeeUtil;
 import com.jun.smartlineup.user.domain.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
@@ -67,7 +66,7 @@ public class Attendee {
     public void pasteFromAttendee(Attendee attendee) {
         this.id = attendee.getId();
     }
-    public void pasteFromDao(QueueDao attendee) {
+    public void pasteFromDao(FindPositionDao attendee) {
         this.id = attendee.id();
     }
 }

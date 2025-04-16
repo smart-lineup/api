@@ -19,7 +19,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
@@ -41,8 +40,8 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
     @Value("${jwt.secret-key}")
     private String secretKey;
 
-    @Value("${jwt.expiration-time}")
-    private long EXPIRATION_TIME;
+    @Value("${jwt.expiration-hours}")
+    private long EXPIRATION_HOURS;
 
     @Value("${spring.profiles.active:default}")
     private String activeProfile;
@@ -66,7 +65,7 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
                 .claim("name", user.getName())
                 .claim("role", user.getRole())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .expiration(new Date(System.currentTimeMillis() + (EXPIRATION_HOURS * 60 * 60 * 1000)))
                 .signWith(key)
                 .compact();
     }

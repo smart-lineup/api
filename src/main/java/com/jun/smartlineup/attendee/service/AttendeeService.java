@@ -1,6 +1,6 @@
 package com.jun.smartlineup.attendee.service;
 
-import com.jun.smartlineup.attendee.dao.QueueDao;
+import com.jun.smartlineup.attendee.dao.FindPositionDao;
 import com.jun.smartlineup.attendee.domain.Attendee;
 import com.jun.smartlineup.attendee.dto.AttendeeAddRequestDto;
 import com.jun.smartlineup.attendee.dto.AttendeeDeleteRequestDto;
@@ -39,7 +39,7 @@ public class AttendeeService {
         if (!attendeeCanJoin(dto.getUuid())) {
             throw new ImpossibleRequestException("add", user);
         }
-        List<QueueDao> list = queueRepository.findAllByLine_IdForAttendee(line.getId());
+        List<FindPositionDao> list = queueRepository.findAllByLine_IdForAttendee(line.getId());
         AttendeeUtil.validBeforeAdd(dto.getPhone(), list);
 
         Attendee attendee = attendeeRepository.findByNameAndPhone(dto.getName(), dto.getPhone())
@@ -68,12 +68,12 @@ public class AttendeeService {
             return new AttendeePositionResponseDto(false, 0, 0);
         }
 
-        List<QueueDao> allQueues = queueRepository.findAllByLine_IdForAttendee(line.getId());
+        List<FindPositionDao> allQueues = queueRepository.findAllByLine_IdForAttendee(line.getId());
         if (allQueues.isEmpty()) {
             return new AttendeePositionResponseDto(true, 0, 0);
         }
 
-        List<QueueDao> queueList = orderQueueList(allQueues);
+        List<FindPositionDao> queueList = orderQueueList(allQueues);
 
         int index = 0;
         for (int i = 0; i < queueList.size(); i++) {
@@ -86,12 +86,12 @@ public class AttendeeService {
         return new AttendeePositionResponseDto(true, index, queueList.size());
     }
 
-    private List<QueueDao> orderQueueList(List<QueueDao> allQueues) {
-        Map<Long, QueueDao> queueMap = allQueues.stream()
-                .collect(Collectors.toMap(QueueDao::id, queue -> queue));
+    private List<FindPositionDao> orderQueueList(List<FindPositionDao> allQueues) {
+        Map<Long, FindPositionDao> queueMap = allQueues.stream()
+                .collect(Collectors.toMap(FindPositionDao::id, queue -> queue));
 
         // 첫 번째 항목 찾기
-        QueueDao firstQueue = allQueues.stream()
+        FindPositionDao firstQueue = allQueues.stream()
                 .filter(queue -> queue.prevId() == null)
                 .findFirst()
                 .orElse(null);
@@ -101,8 +101,8 @@ public class AttendeeService {
         }
 
         // 링크를 따라가며 순서 재구성
-        List<QueueDao> orderedQueue = new ArrayList<>();
-        QueueDao current = firstQueue;
+        List<FindPositionDao> orderedQueue = new ArrayList<>();
+        FindPositionDao current = firstQueue;
         while (current != null) {
             if (current.status() == QueueStatus.WAITING) {
                 orderedQueue.add(current);

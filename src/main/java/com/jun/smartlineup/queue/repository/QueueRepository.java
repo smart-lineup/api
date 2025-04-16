@@ -1,5 +1,6 @@
 package com.jun.smartlineup.queue.repository;
 
+import com.jun.smartlineup.attendee.dao.FindPositionDao;
 import com.jun.smartlineup.attendee.dao.QueueDao;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.queue.domain.Queue;
@@ -18,7 +19,7 @@ public interface QueueRepository extends JpaRepository<Queue, Long> {
     List<Queue> findAllByUserAndLine_Id(@Param("user") User user, @Param("lineId") Long lineId);
 
     @Query("""
-    SELECT new com.jun.smartlineup.attendee.dao.QueueDao(
+    SELECT new com.jun.smartlineup.attendee.dao.FindPositionDao(
         q.id,
         q.next.id,
         q.previous.id,
@@ -29,7 +30,7 @@ public interface QueueRepository extends JpaRepository<Queue, Long> {
     left join Attendee a on a.id = q.attendee.id
     WHERE q.line.id = :lineId AND q.deletedAt is null
     """)
-    List<QueueDao> findAllByLine_IdForAttendee(@Param("lineId") Long lineId);
+    List<FindPositionDao> findAllByLine_IdForAttendee(@Param("lineId") Long lineId);
 
     Optional<Queue> findFirstByLineAndDeletedAtIsNullOrderByIdDesc(Line line);
 
@@ -48,4 +49,14 @@ public interface QueueRepository extends JpaRepository<Queue, Long> {
       RETURNING attendee.phone
     """, nativeQuery = true)
     List<String> deleteAndReturnPhones(@Param("uuid") String uuid, @Param("phone") String phone);
+
+    @Query("""
+        SELECT new com.jun.smartlineup.attendee.dao.QueueDao(
+            q,
+            a
+        ) FROM Queue q
+        LEFT JOIN Attendee a on a = q.attendee
+        WHERE q.line = :line
+    """)
+    List<QueueDao> findQueueWithAttendeeByLine(Line line);
 }
