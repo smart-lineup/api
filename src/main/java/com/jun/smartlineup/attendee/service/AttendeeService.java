@@ -53,7 +53,7 @@ public class AttendeeService {
         Line line = byUuidAndDeleteAtIsNull.orElseThrow(IllegalArgumentException::new);
         User user = line.getUser();
         Role role = user.getRole();
-        if (role.isPremium()) {
+        if (role.isPaid()) {
             return true;
         }
 

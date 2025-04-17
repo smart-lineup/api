@@ -59,4 +59,14 @@ public class UserController {
         emailService.feedbackEmail(dto.getTitle(), dto.getContent(), dto.getIsPremium());
         return ResponseEntity.ok("ok");
     }
+
+    @PostMapping("/apply/beta")
+    public ResponseEntity<String> applyBeta() {
+        CustomUserDetails userDetails = UserUtil.getUserDetails();
+        userService.applyBetaTester(userDetails);
+        ResponseCookie responseCookie = userService.tokenReset(userDetails);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .body("ok");
+    }
 }

@@ -10,7 +10,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public enum Role {
     FREE("FREE", "Basic user"),
-    PREMIUM("PREMIUM", "Pay user");
+    PREMIUM("PREMIUM", "Pay user"),
+    BETA("BETA", "Beta Tester");
 
     private final String key;
     private final String title;
@@ -23,10 +24,13 @@ public enum Role {
         if (s.equals(Role.PREMIUM.key)) {
             return Role.PREMIUM;
         }
+        if (s.equals(Role.BETA.key)) {
+            return Role.BETA;
+        }
         return Role.FREE;
     }
 
-    public boolean isPremium() {
-        return this.key.equals("PREMIUM");
+    public boolean isPaid() {
+        return this.key.equals("PREMIUM") || this.key.equals("BETA");
     }
 }
