@@ -1,12 +1,9 @@
-FROM openjdk:17-jdk-slim
-
+FROM gradle:7.6-jdk17 AS builder
 WORKDIR /app
 COPY . .
+RUN gradle build --no-daemon
 
-# 로그 찍기 - jar 파일 위치 확인
-RUN ls -al build/libs || echo "📁 build/libs not found"
-RUN find . -name "*.jar" || echo "❗ No .jar files found"
-
-COPY build/libs/smartlineup-*.jar app.jar
-
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=builder /app/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
