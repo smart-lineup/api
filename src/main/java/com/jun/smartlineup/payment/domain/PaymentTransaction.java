@@ -41,7 +41,7 @@ public class PaymentTransaction {
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "payment_method_type")
     private PaymentMethod paymentMethod;
 
     private String transactionId;
@@ -55,6 +55,7 @@ public class PaymentTransaction {
     private String receiptUrl;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "pay_status_type")
     private PayStatus status;
 
     private String failCode;
