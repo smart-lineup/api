@@ -145,7 +145,6 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
                 .secure(true)
                 .path("/")
                 .maxAge(maxAge)
-                .domain(frontendDomain)
                 .sameSite("None")
                 .build();
     }
