@@ -41,6 +41,11 @@ public class User {
     @Column(length = 60)
     private String password;
 
+    @Builder.Default
+    private boolean privacyAgreed = false;
+
+    private LocalDateTime privacyAgreedAt;
+
     @Column(nullable = false, name = "is_OAuth_login")
     @Builder.Default
     private Boolean isOAuthLogin = true;

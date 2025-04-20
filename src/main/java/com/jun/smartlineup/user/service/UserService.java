@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -87,6 +88,8 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                 .email(signupDto.getEmail())
                 .password(encodePassword(signupDto.getPassword()))
                 .name(signupDto.getName())
+                .privacyAgreed(true)
+                .privacyAgreedAt(LocalDateTime.now())
                 .isOAuthLogin(false)
                 .role(Role.FREE)
                 .isVerified(false)
