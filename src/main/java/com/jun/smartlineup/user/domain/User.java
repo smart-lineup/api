@@ -47,7 +47,7 @@ public class User {
 
     private LocalDateTime privacyAgreedAt;
 
-    @Column(nullable = false, name = "is_OAuth_login")
+    @Column(nullable = false, name = "is_oauth_login")
     @Builder.Default
     private Boolean isOAuthLogin = true;
 
