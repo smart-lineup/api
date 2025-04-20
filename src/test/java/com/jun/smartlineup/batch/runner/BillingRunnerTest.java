@@ -225,6 +225,8 @@ class BillingRunnerTest {
                 .password("pw")
                 .uuid(UUID.randomUUID().toString())
                 .role(Role.PREMIUM)
+                .privacyAgreed(true)
+                .privacyAgreedAt(LocalDateTime.now())
                 .isVerified(true)
                 .isOAuthLogin(false)
                 .build();
