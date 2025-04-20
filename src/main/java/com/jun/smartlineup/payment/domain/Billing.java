@@ -38,16 +38,13 @@ public class Billing {
     @Setter
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "billing_status_type")
     private BillingStatus status = BillingStatus.NONE;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "payment_method_type")
     private PaymentMethod paymentProvider = PaymentMethod.TOSS;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "plan_type")
     private PlanType planType;
 
     private LocalDate startedAt;

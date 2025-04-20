@@ -35,7 +35,6 @@ public class User {
     private String picture;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "role_type")
     private Role role;
 
     // hash fix length is 60
