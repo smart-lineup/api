@@ -42,10 +42,10 @@ public class AttendeeService {
         List<FindPositionDao> list = queueRepository.findAllByLine_IdForAttendee(line.getId());
         AttendeeUtil.validBeforeAdd(dto.getPhone(), list);
 
-        Attendee attendee = attendeeRepository.findByNameAndPhone(dto.getName(), dto.getPhone())
+        Attendee attendee = attendeeRepository.findByNameAndPhoneAndUser(dto.getName(), dto.getPhone(), user)
                 .orElse(Attendee.fromDto(line.getUser(), dto));
         attendeeRepository.save(attendee);
-        QueueUtil.addQueue(queueRepository, line, attendee);
+        QueueUtil.addQueue(queueRepository, line, attendee, user);
     }
 
     public boolean attendeeCanJoin(String uuid) {

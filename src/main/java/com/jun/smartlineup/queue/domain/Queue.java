@@ -32,6 +32,10 @@ public class Queue {
     @JoinColumn(name = "line_id")
     private Line line;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @ManyToOne
     @JoinColumn(name = "previous_id")
     @Setter
@@ -59,9 +63,10 @@ public class Queue {
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public static Queue createQueue(Line line, Attendee attendee) {
+    public static Queue createQueue(Line line, Attendee attendee, User user) {
         return Queue.builder()
                 .attendee(attendee)
+                .user(user)
                 .line(line)
                 .build();
     }

@@ -74,8 +74,8 @@ public class QueueServiceImpl implements QueueService {
         if (!move.getLine().getId().equals(dto.getLineId())) {
             throw new RuntimeException("Wrong request::Not match Line::request Line::" + dto.getLineId() + ", find Line::" + move.getLine().getId());
         }
-        if (!move.getLine().getUser().equals(user)) {
-            throw new RuntimeException("Wrong request::Not match User::request User::" + user + ", Line User::" + move.getLine().getUser());
+        if (!move.getUser().equals(user)) {
+            throw new RuntimeException("Wrong request::Not match User::request User::" + user + ", Line User::" + move.getUser());
         }
 
         ChangeLikedListByReorder(dto, move, target);
@@ -115,8 +115,8 @@ public class QueueServiceImpl implements QueueService {
         Optional<Queue> optionalQueue = queueRepository.findByUserAndQueue_Id(user, queueId);
         Queue queue = optionalQueue.orElseThrow(() -> new RuntimeException("change status error::queue id:" + queueId));
 
-        if (!queue.getLine().getUser().equals(user)) {
-            throw new RuntimeException("Not match User::change status::try user=" + user.getEmail() + ", origin user=" + queue.getLine().getUser());
+        if (!queue.getUser().equals(user)) {
+            throw new RuntimeException("Not match User::change status::try user=" + user.getEmail() + ", origin user=" + queue.getUser());
         }
 
         QueueStatus queueStatus = QueueStatus.convertStatus(status);
@@ -194,7 +194,7 @@ public class QueueServiceImpl implements QueueService {
             Queue lastQueueBeforeChunk = queueRepository.findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line)
                     .orElse(null);
 
-            List<Queue> queueChunk = buildQueuesWithLinks(combineAttendee, line, lastQueueBeforeChunk);
+            List<Queue> queueChunk = buildQueuesWithLinks(combineAttendee, line, lastQueueBeforeChunk, user);
 
             if (lastQueueBeforeChunk != null) {
                 queueRepository.save(lastQueueBeforeChunk);
@@ -218,10 +218,10 @@ public class QueueServiceImpl implements QueueService {
                 .toList();
     }
 
-    private List<Queue> buildQueuesWithLinks(List<Attendee> attendees, Line line, Queue previous) {
+    private List<Queue> buildQueuesWithLinks(List<Attendee> attendees, Line line, Queue previous, User user) {
         List<Queue> queueList = new ArrayList<>();
         for (Attendee attendee : attendees) {
-            Queue queue = Queue.createQueue(line, attendee);
+            Queue queue = Queue.createQueue(line, attendee, user);
             if (previous != null) {
                 queue.setPrevious(previous);
                 previous.setNext(queue);
@@ -240,11 +240,11 @@ public class QueueServiceImpl implements QueueService {
         List<FindPositionDao> list = queueRepository.findAllByLine_IdForAttendee(line.getId());
         AttendeeUtil.validBeforeAdd(dto.getAttendee().getPhone(), list);
 
-        Attendee attendee = attendeeRepository.findByNameAndPhone(dto.getAttendee().getName(), dto.getAttendee().getPhone())
+        Attendee attendee = attendeeRepository.findByNameAndPhoneAndUser(dto.getAttendee().getName(), dto.getAttendee().getPhone(), user)
                 .orElse(dto.getAttendee().toEntity(user));
         attendeeRepository.save(attendee);
 
-        QueueUtil.addQueue(queueRepository, line, attendee);
+        QueueUtil.addQueue(queueRepository, line, attendee, user);
     }
 
 }

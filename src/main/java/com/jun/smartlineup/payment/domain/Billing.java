@@ -115,4 +115,12 @@ public class Billing {
     public void changeRenewal(boolean renewal) {
         this.renewal = renewal;
     }
+
+    public void deleteBilling() {
+        billingKey = "";
+        customerKey = "";
+        status = BillingStatus.NONE;
+        renewal = false;
+        cardLastNumber = "";
+    }
 }

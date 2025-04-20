@@ -4,14 +4,15 @@ import com.jun.smartlineup.attendee.domain.Attendee;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.queue.repository.QueueRepository;
+import com.jun.smartlineup.user.domain.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class QueueUtil {
-    public static void addQueue(QueueRepository queueRepository, Line line, Attendee attendee) {
+    public static void addQueue(QueueRepository queueRepository, Line line, Attendee attendee, User user) {
         Optional<Queue> optionalQueue = queueRepository.findFirstByLineAndDeletedAtIsNullOrderByIdDesc(line);
-        Queue queue = Queue.createQueue(line, attendee);
+        Queue queue = Queue.createQueue(line, attendee, user);
         if (optionalQueue.isPresent()) {
             Queue previous = optionalQueue.get();
             queue.setPrevious(previous);

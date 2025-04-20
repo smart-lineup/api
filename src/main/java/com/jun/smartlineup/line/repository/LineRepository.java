@@ -11,4 +11,6 @@ public interface LineRepository extends JpaRepository<Line, Long> {
     List<Line> getLinesByUserAndDeleteAtIsNullOrderByCreatedAt(User user);
     Optional<Line> getLineByIdAndUserAndDeleteAtIsNull(Long id, User user);
     Optional<Line> findByUuidAndDeleteAtIsNull(String uuid);
+
+    void deleteAllByUser(User user);
 }

@@ -8,6 +8,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -52,6 +53,12 @@ public class User {
     @Column(nullable = false, unique = true, length = 36)
     private String uuid;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE;
+
+    private LocalDateTime deletedAt;
+
     @Builder.Default
     @CreatedDate
     @Column(updatable = false)
@@ -87,5 +94,14 @@ public class User {
 
     public void updateProfile(UpdateProfileRequestDto dto) {
         this.name = dto.getName();
+    }
+
+    public void deleteUser() {
+        this.email = "deleted_user_" + id + "@deleted.local";
+        this.name = "deleted";
+        this.picture = "deleted";
+        this.password = UUID.randomUUID().toString();
+        this.status = UserStatus.DELETED;
+        this.deletedAt = LocalDateTime.now();
     }
 }

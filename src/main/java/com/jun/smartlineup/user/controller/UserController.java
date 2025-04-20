@@ -7,6 +7,7 @@ import com.jun.smartlineup.user.dto.FeedbackDto;
 import com.jun.smartlineup.user.dto.UpdateProfileRequestDto;
 import com.jun.smartlineup.user.dto.UserUuidResponseDto;
 import com.jun.smartlineup.user.service.UserService;
+import com.jun.smartlineup.user.service.WithdrawService;
 import com.jun.smartlineup.user.utils.UserUtil;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ public class UserController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
+    private final WithdrawService withdrawService;
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
@@ -65,6 +67,17 @@ public class UserController {
         CustomUserDetails userDetails = UserUtil.getUserDetails();
         userService.applyBetaTester(userDetails);
         ResponseCookie responseCookie = userService.tokenReset(userDetails);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .body("ok");
+    }
+
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<String> withdraw() {
+        withdrawService.withdraw(UserUtil.getUserDetails());
+
+        ResponseCookie responseCookie = jwtTokenProvider.cookieFactory("", 0);
+        SecurityContextHolder.clearContext();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
                 .body("ok");

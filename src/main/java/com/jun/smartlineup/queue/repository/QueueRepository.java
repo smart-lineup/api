@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public interface QueueRepository extends JpaRepository<Queue, Long> {
 
-    @Query("SELECT q FROM Queue q WHERE q.line.id = :lineId AND q.line.user = :user AND q.deletedAt is null")
+    @Query("SELECT q FROM Queue q WHERE q.line.id = :lineId AND q.user = :user AND q.deletedAt is null")
     List<Queue> findAllByUserAndLine_Id(@Param("user") User user, @Param("lineId") Long lineId);
 
     @Query("""
@@ -34,7 +34,7 @@ public interface QueueRepository extends JpaRepository<Queue, Long> {
 
     Optional<Queue> findFirstByLineAndDeletedAtIsNullOrderByIdDesc(Line line);
 
-    @Query("SELECT q FROM Queue q WHERE q.line.user = :user AND q.id = :queueId And q.deletedAt is null")
+    @Query("SELECT q FROM Queue q WHERE q.user = :user AND q.id = :queueId And q.deletedAt is null")
     Optional<Queue> findByUserAndQueue_Id(@Param("user") User user, @Param("queueId") Long queueId);
 
     @Modifying
@@ -59,4 +59,9 @@ public interface QueueRepository extends JpaRepository<Queue, Long> {
         WHERE q.line = :line
     """)
     List<QueueDao> findQueueWithAttendeeByLine(Line line);
+
+    void deleteAllByUser(User user);
+
+    @Query("SELECT q FROM Queue q WHERE q.attendee.id = 2")
+    List<Queue> findAllByUser(User user);
 }
