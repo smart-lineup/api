@@ -48,8 +48,6 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
 
     @Value("${frontend.url}")
     private String frontendUrl;
-    @Value("${frontend.domain}")
-    private String frontendDomain;
 
     private SecretKey key;
 
@@ -135,7 +133,6 @@ public class JwtTokenProvider implements AuthenticationSuccessHandler {
                     .secure(false)
                     .path("/")
                     .maxAge(maxAge)
-                    .domain(frontendDomain)
                     .sameSite("Lax")
                     .build();
         }

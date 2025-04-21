@@ -37,6 +37,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Builder.Default
+    private String timezone = "Asia/Seoul";
+
     // hash fix length is 60
     @Column(length = 60)
     private String password;

@@ -54,6 +54,8 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                         .role(Role.FREE)
                         .isOAuthLogin(true)
                         .isVerified(true)
+                        .privacyAgreed(true)
+                        .privacyAgreedAt(LocalDateTime.now())
                         .uuid(UUID.randomUUID().toString())
                         .build()
                 );
