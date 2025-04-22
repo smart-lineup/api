@@ -25,9 +25,8 @@ public class QueueController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
-        List<Queue> queues = queueService.findQueues(user, lineId);
-        List<QueueResponseDto> list = queues.stream().map(QueueResponseDto::fromEntity).toList();
-        return ResponseEntity.ok(list);
+        List<QueueResponseDto> queues = queueService.findQueues(user, lineId);
+        return ResponseEntity.ok(queues);
     }
 
     @PutMapping("/reorder")

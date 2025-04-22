@@ -3,10 +3,7 @@ package com.jun.smartlineup.queue.service;
 import com.jun.smartlineup.attendee.domain.Attendee;
 import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.queue.domain.Queue;
-import com.jun.smartlineup.queue.dto.QueueAddRequestDto;
-import com.jun.smartlineup.queue.dto.QueueAttendeeChangeRequestDto;
-import com.jun.smartlineup.queue.dto.QueueBatchAddRequestDto;
-import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
+import com.jun.smartlineup.queue.dto.*;
 import com.jun.smartlineup.user.dto.CustomUserDetails;
 
 import java.util.List;
@@ -14,7 +11,7 @@ import java.util.List;
 public interface QueueService {
     void save(Queue queue);
 
-    List<Queue> findQueues(CustomUserDetails user, Long lineId);
+    List<QueueResponseDto> findQueues(CustomUserDetails user, Long lineId);
 
     void reorder(CustomUserDetails userDetails, QueueReorderRequestDto dto);
 

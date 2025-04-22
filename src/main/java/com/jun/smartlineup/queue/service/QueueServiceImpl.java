@@ -9,10 +9,7 @@ import com.jun.smartlineup.line.domain.Line;
 import com.jun.smartlineup.line.repository.LineRepository;
 import com.jun.smartlineup.queue.domain.Queue;
 import com.jun.smartlineup.queue.domain.QueueStatus;
-import com.jun.smartlineup.queue.dto.QueueAddRequestDto;
-import com.jun.smartlineup.queue.dto.QueueAttendeeChangeRequestDto;
-import com.jun.smartlineup.queue.dto.QueueBatchAddRequestDto;
-import com.jun.smartlineup.queue.dto.QueueReorderRequestDto;
+import com.jun.smartlineup.queue.dto.*;
 import com.jun.smartlineup.queue.repository.QueueRepository;
 import com.jun.smartlineup.queue.util.QueueUtil;
 import com.jun.smartlineup.user.domain.User;
@@ -47,14 +44,17 @@ public class QueueServiceImpl implements QueueService {
     }
 
     @Override
-    public List<Queue> findQueues(CustomUserDetails userDetails, Long lineId) {
+    public List<QueueResponseDto> findQueues(CustomUserDetails userDetails, Long lineId) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
         List<Queue> allQueues = queueRepository.findAllByUserAndLine_Id(user, lineId);
         if (allQueues.isEmpty()) {
             return Collections.emptyList();
         }
 
-        return QueueUtil.orderQueueList(allQueues);
+        List<Queue> orderedQueues = QueueUtil.orderQueueList(allQueues);
+        return orderedQueues.stream()
+                .map(QueueResponseDto::fromEntity)
+                .toList();
     }
 
     @Override

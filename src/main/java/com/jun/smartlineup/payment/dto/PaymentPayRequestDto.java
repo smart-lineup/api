@@ -12,7 +12,7 @@ public class PaymentPayRequestDto {
     private BigDecimal amount;
     private String orderId;
     private String orderName;
-    private Integer cardInstallmentPlan = 1;
+    private Integer cardInstallmentPlan;
     private String customerEmail;
     private String customerName;
     private BigDecimal taxFreeAmount;
