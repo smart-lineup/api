@@ -38,7 +38,7 @@ public class User {
     private Role role;
 
     @Builder.Default
-    private String timezone = "Asia/Seoul";
+    private String timeZone = "Asia/Seoul";
 
     // hash fix length is 60
     @Column(length = 60)
