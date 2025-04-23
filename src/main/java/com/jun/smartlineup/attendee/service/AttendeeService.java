@@ -16,7 +16,7 @@ import com.jun.smartlineup.queue.repository.QueueRepository;
 import com.jun.smartlineup.queue.util.QueueUtil;
 import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AttendeeService {
     private final AttendeeRepository attendeeRepository;
     private final LineRepository lineRepository;

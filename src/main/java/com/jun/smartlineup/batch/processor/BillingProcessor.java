@@ -13,7 +13,7 @@ import com.jun.smartlineup.payment.repository.PaymentTransactionRepository;
 import com.jun.smartlineup.payment.util.PaymentUtil;
 import com.jun.smartlineup.user.domain.Role;
 import com.jun.smartlineup.user.domain.User;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

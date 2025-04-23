@@ -9,7 +9,7 @@ import com.jun.smartlineup.user.dto.ChangePasswordDto;
 import com.jun.smartlineup.user.repository.PasswordResetTokenRepository;
 import com.jun.smartlineup.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

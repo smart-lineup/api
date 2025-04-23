@@ -11,7 +11,7 @@ import com.jun.smartlineup.user.dto.*;
 import com.jun.smartlineup.user.repository.UserRepository;
 import com.jun.smartlineup.user.utils.UserUtil;
 import jakarta.mail.MessagingException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -73,11 +73,6 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
                 attributes.getNameAttributeKey(),
                 user
         );
-    }
-
-    public User convertUser(OAuth2User oAuth2User) {
-        return userRepository.findByEmail(oAuth2User.getAttribute("email"))
-                .orElseThrow(NoExistUserException::new);
     }
 
     public void signup(SignupRequestDto signupDto) throws MessagingException {

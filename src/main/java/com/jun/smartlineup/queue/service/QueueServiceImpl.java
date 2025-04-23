@@ -18,7 +18,7 @@ import com.jun.smartlineup.user.repository.UserRepository;
 import com.jun.smartlineup.user.utils.UserUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class QueueServiceImpl implements QueueService {
     private final QueueRepository queueRepository;
     private final UserRepository userRepository;
@@ -57,6 +57,7 @@ public class QueueServiceImpl implements QueueService {
                 .toList();
     }
 
+    @Transactional
     @Override
     public void reorder(CustomUserDetails userDetails, QueueReorderRequestDto dto) {
         if (dto.getMovedQueueId().equals(dto.getTargetQueueId())) {
@@ -108,6 +109,7 @@ public class QueueServiceImpl implements QueueService {
         }
     }
 
+    @Transactional
     @Override
     public void changeStatus(CustomUserDetails userDetails, Long queueId, String status) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
@@ -123,6 +125,7 @@ public class QueueServiceImpl implements QueueService {
         queue.setStatus(queueStatus);
     }
 
+    @Transactional
     @Override
     public void delete(CustomUserDetails userDetails, Long queueId) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
@@ -140,6 +143,7 @@ public class QueueServiceImpl implements QueueService {
         }
     }
 
+    @Transactional
     @Override
     public void attendeeInfoChange(CustomUserDetails userDetails, Long queueId, QueueAttendeeChangeRequestDto dto) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
@@ -232,6 +236,7 @@ public class QueueServiceImpl implements QueueService {
         return queueList;
     }
 
+    @Transactional
     public void addQueueByUser(CustomUserDetails userDetails, QueueAddRequestDto dto) {
         User user = UserUtil.ConvertUser(userRepository, userDetails);
         Optional<Line> optionalLine = lineRepository.getLineByIdAndUserAndDeleteAtIsNull(dto.getLineId(), user);
