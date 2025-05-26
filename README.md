@@ -1,13 +1,34 @@
-CREATE TABLE users (
-user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-name VARCHAR(255) NOT NULL,
-email VARCHAR(255) NOT NULL,
-picture VARCHAR(255),
-role ENUM('ROLE_USER', 'ROLE_ADMIN') NOT NULL,
-password VARCHAR(60),
-is_OAuth_login BOOLEAN NOT NULL DEFAULT TRUE,
-is_verified BOOLEAN NOT NULL DEFAULT FALSE,
-verification_token VARCHAR(255),
-created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+# Waitlist Management System
+
+This project is a waitlist management system designed for businesses such as restaurants or hospitals. It allows business owners to manage customer queues efficiently and provides a seamless experience for attendees.
+
+![Project Screenshot](https://github.com/user-attachments/assets/fe55812a-cd06-49e8-9bb8-50b4a3779f02)
+
+## Key Features
+
+- **Easy Queue Management:** Business owners can easily manage and monitor their customer queues.
+- **QR Code Integration:** Attendees can scan a QR code to join the waitlist and input their information (e.g., phone number).
+- **Real-time Queue Updates:** Attendees can view their real-time order and position in the queue.
+
+## Technology Stack
+
+### Backend Technologies
+
+- Java
+- Spring Boot
+- JPA
+- PostgreSQL (managed with Supabase)
+
+### Frontend Technologies
+
+- React
+- Vite
+
+### Deployment
+
+- Docker
+- Render
+
+## License
+
+(License information will be added here in the future.)
